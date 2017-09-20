@@ -67,6 +67,27 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                     message: "<:mimisad:337738373638651906> Stream untracked",
                 });
                 break;
+            case "tracking":
+                GetTrackedStreamsByChannel(channelID, (error, results, fields) => {
+                    if (results) {
+                        var output = [];
+                        function buildOut() {
+                            return (stream) => {
+                                output.push(stream.name + (stream.online ? " **(online)**" : " *(offline)*"));
+                                if (output.length == results.length) {
+                                    bot.sendMessage({
+                                        to: channelID,
+                                        embed: { description: output.join("\n") }
+                                    });
+                                }
+                            }
+                        }
+                        results.forEach((row, index) => {
+                            GetStreamInfo(row.stream_name, buildOut());
+                        });
+                    }
+                });
+                break;
             case "mimi":
                 var req = http.get(`https://picarto.tv/images/chat/emoticons/${args[0]}.png`, (res) => {
                     if (res.statusCode == 200 ) {
@@ -165,6 +186,10 @@ function GetTrackedStreams(callback) {
     db.query("select stream_name, discord_channel from stream_tracking", callback);
 }
 
+function GetTrackedStreamsByChannel(channelID, callback) {
+    db.query(`select stream_name from stream_tracking where discord_channel="${channelID}"`, callback);
+}
+
 function TrackStream(streamName, channelID, callback) {
     db.query(`insert into stream_tracking (stream_name, discord_channel) values ("${streamName}", "${channelID}")`, callback);
 }
@@ -177,20 +202,22 @@ function UntrackStream(streamName, channelID) {
 var streamTracker = {};
 function PollTrackedStreams() {
     GetTrackedStreams((error, results, fields) => {
-        results.forEach((row, index) => {
-            GetStreamInfo(row.stream_name, (stream) => {
-                if (!streamTracker[row.stream_name] && stream.online) {
-                    bot.sendMessage({
-                        to: row.discord_channel,
-                        message: `${stream.name} is now online!`,
-                        embed: BuildEmbed(stream)
-                    });
-                }
-                streamTracker[row.stream_name] = stream.online;
+        if (results) {
+            results.forEach((row, index) => {
+                GetStreamInfo(row.stream_name, (stream) => {
+                    if (!streamTracker[row.stream_name] && stream.online) {
+                        bot.sendMessage({
+                            to: row.discord_channel,
+                            message: `${stream.name} is now online!`,
+                            embed: BuildEmbed(stream)
+                        });
+                    }
+                    streamTracker[row.stream_name] = stream.online;
+                });
             });
-        });
+        }
     });
-    setTimeout(PollTrackedStreams, 600000);
+    setTimeout(PollTrackedStreams, 60000);
 }
 
 PollTrackedStreams();
