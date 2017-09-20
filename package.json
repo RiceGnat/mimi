@@ -1,0 +1,14 @@
+{
+  "name": "mimi",
+  "version": "1.0.0",
+  "description": "Discord bot for Picarto",
+  "main": "mimi.js",
+  "author": "RiceGnat",
+  "scripts": {
+    "start": "node mimi.js"
+  },
+  "dependencies": {
+    "discord.io": "github:izy521/discord.io",
+    "mysql": "^2.14.1"
+  }
+}

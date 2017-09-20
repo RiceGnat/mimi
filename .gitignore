@@ -1,0 +1,5 @@
+# Don't commit node modules
+node_modules/
+
+# Authentication token
+auth.json
