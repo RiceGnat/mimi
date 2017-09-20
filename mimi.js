@@ -219,7 +219,7 @@ var streamTracker = {};
 function AddToStreamTracker(streamName, channelID) {
     if (!streamTracker[streamName])
         streamTracker[streamName] = { channels: [], online: true };
-    if (!streamTracker[streamName].channels.includes(channelID))
+    if (streamTracker[streamName].channels.indexOf(channelID) == -1)
         streamTracker[streamName].channels.push(channelID);
 }
 
