@@ -1,7 +1,7 @@
 var Discord = require("discord.io");
 var http = require("https");
 var mysql = require("mysql");
-var auth = process.env.PORT ? null : require("./auth.json");
+var auth = process.env.BOT_TOKEN ? null : require("./auth.json");
 
 // Bot setup
 var bot = new Discord.Client({
