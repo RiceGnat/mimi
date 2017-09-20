@@ -180,22 +180,14 @@ function BuildEmbed(stream) {
 }
 
 // Database connection
-var db = mysql.createConnection({
+var db = mysql.createPool({
+    connectionLimit: 10,
     host: process.env.DBHOSTNAME || auth.dbHost,
     port: process.env.DBPORT || auth.dbPort,
     user: process.env.DBUSER || auth.dbUser,
     password: process.env.DBPASSWORD || auth.dbPassword,
     database: process.env.DBNAME || auth.dbName,
 })
-
-db.on("error", function (err) {
-    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-
-    }
-    else {
-        throw err;
-    }
-});
 
 function GetTrackedStreams(callback) {
     db.query("select stream_name, discord_channel from stream_tracking", callback);
