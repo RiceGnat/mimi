@@ -44,6 +44,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                                 message = "<:mimiconfused:337738302998183956> Couldn't track stream";
                             }
                             else {
+                                AddToStreamTracker(stream.name, channelID);
                                 message = `<:mimigreetings:337738303178801153> Now tracking ${stream.name}`;
                             }
                             bot.sendMessage({
@@ -62,6 +63,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                 break;
             case "untrack":
                 UntrackStream(args[0], channelID);
+                RemoveFromStreamTracker(args[0], channelID);
                 bot.sendMessage({
                     to: channelID,
                     message: "<:mimisad:337738373638651906> Stream untracked",
@@ -90,7 +92,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                 break;
             case "mimi":
                 var req = http.get(`https://picarto.tv/images/chat/emoticons/${args[0]}.png`, (res) => {
-                    if (res.statusCode == 200 ) {
+                    if (res.statusCode == 200) {
                         var data = [];
                         res.on("data", (chunk) => {
                             data.push(chunk);
@@ -179,11 +181,11 @@ function BuildEmbed(stream) {
 
 // Database connection
 var db = mysql.createConnection({
-    host: process.env.DB_HOSTNAME || auth.dbHost,
-    part: process.env.DB_PORT || auth.dbPort,
-    user: process.env.DB_USER || auth.dbUser,
-    password: process.env.DB_PASSWORD || auth.dbPassword,
-    database: process.env.DB_NAME || auth.dbName,
+    host: process.env.DBHOSTNAME || auth.dbHost,
+    port: process.env.DBPORT || auth.dbPort,
+    user: process.env.DBUSER || auth.dbUser,
+    password: process.env.DBPASSWORD || auth.dbPassword,
+    database: process.env.DBNAME || auth.dbName,
 })
 
 db.on("error", function (err) {
@@ -213,26 +215,51 @@ function UntrackStream(streamName, channelID) {
 
 // Stream tracking
 var streamTracker = {};
-function PollTrackedStreams() {
+
+function AddToStreamTracker(streamName, channelID) {
+    if (!streamTracker[streamName])
+        streamTracker[streamName] = { channels: [], online: true };
+    if (!streamTracker[streamName].channels.includes(channelID))
+        streamTracker[streamName].channels.push(channelID);
+}
+
+function RemoveFromStreamTracker(streamName, channelID) {
+    if (streamTracker[streamName]) {
+        delete streamTracker[streamName].channels[channelID];
+        if (Object.keys(streamTracker[streamName].channels).length == 0)
+            delete streamTracker[streamName];
+    }
+}
+
+function LoadTrackedStreams() {
     GetTrackedStreams((error, results, fields) => {
         if (results) {
             results.forEach((row, index) => {
-                GetStreamInfo(row.stream_name, (stream) => {
-                    if (!streamTracker[row.stream_name] && stream.online) {
-                        bot.sendMessage({
-                            to: row.discord_channel,
-                            message: `${stream.name} is now online!`,
-                            embed: BuildEmbed(stream)
-                        });
-                    }
-                    streamTracker[row.stream_name] = stream.online;
-                });
+                AddToStreamTracker(row.stream_name, row.discord_channel);
             });
         }
     });
-    setTimeout(PollTrackedStreams, 60000);
 }
 
+function PollTrackedStreams() {
+    Object.keys(streamTracker).forEach((streamName, index) => {
+        GetStreamInfo(streamName, (stream) => {
+            if (!streamTracker[streamName].online && stream.online) {
+                streamTracker[streamName].channels.forEach((channelID, index) => {
+                    bot.sendMessage({
+                        to: channelID,
+                        message: `<:mimiright:337738348095602688> ${stream.name} is now online!`,
+                        embed: BuildEmbed(stream)
+                    });
+                });
+            }
+            streamTracker[streamName].online = stream.online;
+        });
+    });
+    setTimeout(PollTrackedStreams, 10000);
+}
+
+LoadTrackedStreams();
 PollTrackedStreams();
 
 // Dummy server
