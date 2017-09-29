@@ -27,7 +27,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                     bot.sendMessage({
                         to: channelID,
                         message: !stream ? "<:mimiconfused:337738302998183956> Stream not found" : null,
-                        embed: BuildEmbed(stream)
+                        embed: stream ? BuildEmbed(stream) : null
                     });
                 });
                 break;
@@ -75,7 +75,8 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                         var output = [];
                         function buildOut() {
                             return (stream) => {
-                                output.push(stream.name + (stream.online ? " **(online)**" : " *(offline)*"));
+                                if (stream) output.push(stream.name + (stream.online ? " **(online)**" : " *(offline)*"));
+                                else output.push(null);
                                 if (output.length == results.length) {
                                     bot.sendMessage({
                                         to: channelID,
@@ -136,6 +137,7 @@ function GetStreamInfo(name, callback) {
             });
         }
         else {
+            console.log(`Stream request for ${name} failed.`);
             callback(null);
         }
     });
@@ -236,16 +238,21 @@ function LoadTrackedStreams() {
 function PollTrackedStreams() {
     Object.keys(streamTracker).forEach((streamName, index) => {
         GetStreamInfo(streamName, (stream) => {
-            if (!streamTracker[streamName].online && stream.online) {
-                streamTracker[streamName].channels.forEach((channelID, index) => {
-                    bot.sendMessage({
-                        to: channelID,
-                        message: `<:mimiright:337738348095602688> ${stream.name} is now online!`,
-                        embed: BuildEmbed(stream)
-                    });
-                });
+            if (!stream) {
+                streamTracker[streamName].online = false;
             }
-            streamTracker[streamName].online = stream.online;
+            else {
+                if (!streamTracker[streamName].online && stream.online) {
+                    streamTracker[streamName].channels.forEach((channelID, index) => {
+                        bot.sendMessage({
+                            to: channelID,
+                            message: `<:mimiright:337738348095602688> ${stream.name} is now online!`,
+                            embed: BuildEmbed(stream)
+                        });
+                    });
+                }
+                streamTracker[streamName].online = stream.online;
+            }
         });
     });
     setTimeout(PollTrackedStreams, 10000);
@@ -253,9 +260,3 @@ function PollTrackedStreams() {
 
 LoadTrackedStreams();
 PollTrackedStreams();
-
-// Dummy server
-http.createServer((req, res) => {
-    res.writeHead(200);
-    res.end();
-}).listen(process.env.PORT || 8080);
