@@ -4,6 +4,7 @@
   "description": "Discord bot for Picarto",
   "main": "mimi.js",
   "author": "RiceGnat",
+  "repository": "github:RiceGnat/mimi",
   "scripts": {
     "start": "node mimi.js"
   },
