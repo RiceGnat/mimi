@@ -26,7 +26,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                 GetStreamInfo(args[0], (stream) => {
                     bot.sendMessage({
                         to: channelID,
-                        message: !stream ? "<:mimiconfused:337738302998183956> Stream not found" : null,
+                        message: !stream ? "<:mimiconfused:372499377807425566> Stream not found" : null,
                         embed: stream ? BuildEmbed(stream) : null
                     });
                 });
@@ -37,15 +37,15 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                         TrackStream(args[0], channelID, (error) => {
                             var message;
                             if (error && error.code == "ER_DUP_ENTRY") {
-                                message = `<:mimiscratch:337738373839978516> Already tracking ${stream.name} in this channel`;
+                                message = `<:mimiscratch:372499377928798208> Already tracking ${stream.name} in this channel`;
                             }
                             else if (error) {
                                 console.log(error);
-                                message = "<:mimiconfused:337738302998183956> Couldn't track stream";
+                                message = "<:mimiconfused:372499377807425566> Couldn't track stream";
                             }
                             else {
                                 AddToStreamTracker(stream.name, channelID);
-                                message = `<:mimigreetings:337738303178801153> Now tracking ${stream.name}`;
+                                message = `<:mimigreetings:372499377501241355> Now tracking ${stream.name}`;
                             }
                             bot.sendMessage({
                                 to: channelID,
@@ -56,7 +56,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                     else {
                         bot.sendMessage({
                             to: channelID,
-                            message: "<:mimiconfused:337738302998183956> Stream not found",
+                            message: "<:mimiconfused:372499377807425566> Stream not found",
                         });
                     }
                 });
@@ -66,7 +66,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                 RemoveFromStreamTracker(args[0], channelID);
                 bot.sendMessage({
                     to: channelID,
-                    message: "<:mimisad:337738373638651906> Stream untracked",
+                    message: "<:mimisad:372499377752768522> Stream untracked",
                 });
                 break;
             case "tracking":
@@ -107,12 +107,6 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                     }
                 });
                 req.end();
-                break;
-            case "test":
-                bot.sendMessage({
-                    to: channelID,
-                    message: "<:cagface:358103930594394114>"
-                });
                 break;
         }
     }
@@ -212,7 +206,7 @@ var streamTracker = {};
 
 function AddToStreamTracker(streamName, channelID) {
     if (!streamTracker[streamName])
-        streamTracker[streamName] = { channels: [], online: true };
+        streamTracker[streamName] = { channels: [], online: false };
     if (streamTracker[streamName].channels.indexOf(channelID) == -1)
         streamTracker[streamName].channels.push(channelID);
 }
@@ -246,7 +240,7 @@ function PollTrackedStreams() {
                     streamTracker[streamName].channels.forEach((channelID, index) => {
                         bot.sendMessage({
                             to: channelID,
-                            message: `<:mimiright:337738348095602688> ${stream.name} is now online!`,
+                            message: `<:mimiright:372499377773871115> ${stream.name} is now online!`,
                             embed: BuildEmbed(stream)
                         });
                     });
