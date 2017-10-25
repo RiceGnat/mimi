@@ -34,7 +34,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
             case "track":
                 GetStreamInfo(args[0], (stream) => {
                     if (stream) {
-                        TrackStream(args[0], channelID, (error) => {
+                        TrackStream(stream.name, channelID, (error) => {
                             var message;
                             if (error && error.code == "ER_DUP_ENTRY") {
                                 message = `<:mimiscratch:372499377928798208> Already tracking ${stream.name} in this channel`;
@@ -45,6 +45,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                             }
                             else {
                                 AddToStreamTracker(stream.name, channelID);
+                                console.log(`Now tracking ${stream.name} in channel ${channelID}`);
                                 message = `<:mimigreetings:372499377501241355> Now tracking ${stream.name}`;
                             }
                             bot.sendMessage({
@@ -205,17 +206,22 @@ function UntrackStream(streamName, channelID) {
 var streamTracker = {};
 
 function AddToStreamTracker(streamName, channelID) {
-    if (!streamTracker[streamName])
-        streamTracker[streamName] = { channels: [], online: false };
-    if (streamTracker[streamName].channels.indexOf(channelID) == -1)
-        streamTracker[streamName].channels.push(channelID);
+    var name = streamName.toLowerCase();
+    if (!streamTracker[name])
+        streamTracker[name] = { channels: [], online: false };
+    if (streamTracker[name].channels.indexOf(channelID) == -1)
+        streamTracker[name].channels.push(channelID);
+    console.log(streamTracker);
 }
 
 function RemoveFromStreamTracker(streamName, channelID) {
-    if (streamTracker[streamName]) {
-        delete streamTracker[streamName].channels[channelID];
-        if (Object.keys(streamTracker[streamName].channels).length == 0)
-            delete streamTracker[streamName];
+    var name = streamName.toLowerCase();
+    if (streamTracker[name]) {
+        var index = streamTracker[name].channels.indexOf(channelID);
+        if (index > -1)
+            streamTracker[name].channels.splice(index, 1);
+        if (Object.keys(streamTracker[name].channels).length == 0)
+            delete streamTracker[name];
     }
 }
 
@@ -231,13 +237,14 @@ function LoadTrackedStreams() {
 
 function PollTrackedStreams() {
     Object.keys(streamTracker).forEach((streamName, index) => {
+        var name = streamName.toLowerCase();
         GetStreamInfo(streamName, (stream) => {
             if (!stream) {
-                streamTracker[streamName].online = false;
+                streamTracker[name].online = false;
             }
             else {
-                if (!streamTracker[streamName].online && stream.online) {
-                    streamTracker[streamName].channels.forEach((channelID, index) => {
+                if (!streamTracker[name].online && stream.online) {
+                    streamTracker[name].channels.forEach((channelID, index) => {
                         bot.sendMessage({
                             to: channelID,
                             message: `<:mimiright:372499377773871115> ${stream.name} is now online!`,
@@ -245,11 +252,11 @@ function PollTrackedStreams() {
                         });
                     });
                 }
-                streamTracker[streamName].online = stream.online;
+                streamTracker[name].online = stream.online;
             }
         });
     });
-    setTimeout(PollTrackedStreams, 10000);
+    setTimeout(PollTrackedStreams, 5000);
 }
 
 LoadTrackedStreams();
