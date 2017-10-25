@@ -211,7 +211,6 @@ function AddToStreamTracker(streamName, channelID) {
         streamTracker[name] = { channels: [], online: false };
     if (streamTracker[name].channels.indexOf(channelID) == -1)
         streamTracker[name].channels.push(channelID);
-    console.log(streamTracker);
 }
 
 function RemoveFromStreamTracker(streamName, channelID) {
