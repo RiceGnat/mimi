@@ -137,20 +137,20 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                     to: channelID,
                     embed: {
                         title: "<:mimigreetings:372499377501241355> Mimi",
-                        description: "Look up and track Picarto streams. Commands apply only to the Discord channel they're entered from.",
+                        description: "Picarto bot",
                         fields: [
                             {
                                 name: "Streams",
                                 value: [
                                     "`!stream (name)`\tLook up a stream",
                                     "`!track (name)`\tTrack a stream in this channel",
-                                    "`!tracking`\tShow a list of tracked streams"].join("\n")
+                                    "`!tracking`\tShow a list of streams tracked in this channel"].join("\n")
                             },
                             {
                                 name: "Control",
                                 value: [
                                     "`!set (option) (value)`",
-                                    "\t`!set notify-limit (time)[s|m|h]`\tLimit stream notifications"].join("\n")
+                                    "\t`!set notify-limit (time)[s|m|h]`\tLimit stream notifications in this channel"].join("\n")
                             },
                             {
                                 name: "Emotes",
@@ -267,9 +267,11 @@ function SaveOptions(channelID) {
 function AddToStreamTracker(streamName, channelID) {
     var name = streamName.toLowerCase();
     if (!streamTracker[name])
-        streamTracker[name] = { channels: [], online: false };
-    if (streamTracker[name].channels.indexOf(channelID) == -1)
+        streamTracker[name] = { channels: [], online: false, last: {} };
+    if (streamTracker[name].channels.indexOf(channelID) == -1) {
         streamTracker[name].channels.push(channelID);
+        streamTracker[name].last[channelID] = 0;
+    }
 }
 
 function RemoveFromStreamTracker(streamName, channelID) {
@@ -304,11 +306,17 @@ function PollTrackedStreams() {
             else {
                 if (!streamTracker[name].online && stream.online) {
                     streamTracker[name].channels.forEach((channelID, index) => {
-                        bot.sendMessage({
-                            to: channelID,
-                            message: `<:mimiright:372499377773871115> ${stream.name} is now online!`,
-                            embed: BuildEmbed(stream)
-                        });
+                        var last = streamTracker[name].last[channelID];
+                        var limit = options[channelID]["notify-limit"];
+
+                        if (limit > 0 && Date.now() - last >= limit) {
+                            bot.sendMessage({
+                                to: channelID,
+                                message: `<:mimiright:372499377773871115> ${stream.name} is now online!`,
+                                embed: BuildEmbed(stream)
+                            });
+                            streamTracker[name].last[channelID] = Date.now();
+                        }
                     });
                 }
                 streamTracker[name].online = stream.online;
@@ -338,7 +346,7 @@ function SetOption(channelID, key, value, callback) {
             if (!match) return callback("Invalid time specified");
             var duration = match[1];
             var unit = match[2];
-            if (!unit) unit = "m";
+            if (!unit) unit = "s";
             switch (unit) {
                 case "h":
                     duration *= 60;

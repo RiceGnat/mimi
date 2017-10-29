@@ -1,7 +1,7 @@
 {
   "name": "mimi",
   "version": "1.0.0",
-  "description": "Discord bot for Picarto",
+  "description": "Picarto bot for Discord",
   "main": "mimi.js",
   "author": "RiceGnat",
   "repository": "github:RiceGnat/mimi",
