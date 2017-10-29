@@ -2,6 +2,7 @@ var Discord = require("discord.io");
 var http = require("https");
 var mysql = require("mysql");
 var auth = process.env.BOT_TOKEN ? null : require("./auth.json");
+const config = require("./package.json").config;
 
 var streamTracker = {};
 var options = {};
@@ -157,7 +158,8 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                                 value: [
                                     "`!mimi (emote)`\tMimi emotes from Picarto chat"].join("\n")
                             }
-                        ]
+                        ],
+                        footer: { text: `Developed by RiceGnat#9420`}
                     }
                 });
                 break;
