@@ -225,7 +225,7 @@ function BuildEmbed(stream) {
         description: stream.title + "\t" + (stream.gaming ? " :video_game:" : "") + (stream.adult ? " :underage:" : "") + (stream.commissions ? " :paintbrush:" : "") + (stream.private ? " :lock:" : ""),
         fields: fields,
         thumbnail: { url: `https://picarto.tv/user_data/usrimg/${stream.name.toLowerCase()}/dsdefault.jpg` },
-        image: stream.online ? { url: `https://thumb-us1.picarto.tv/thumbnail/${stream.name}.jpg` } : null,
+        image: stream.online ? { url: `https://thumb-us-east1.picarto.tv/thumbnail/${stream.name}.jpg?${Math.trunc(Date.now()/1000)}` } : null,
         footer: !stream.online && last.valueOf() != 0 ? { text: `Last online on ${last.toDateString()}` } : null
     };
 }
