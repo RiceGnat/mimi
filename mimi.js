@@ -297,7 +297,6 @@ function PollTrackedStreams() {
             else {
                 if (!streamTracker[name].online && stream.online) {
                     streamTracker[name].channels.forEach((channelID, index) => {
-                        console.log(name + " " + channelID);
                         var last = streamTracker[name].last[channelID];
                         var limit = options[channelID] ? options[channelID]["notify-limit"] : 0;
 
@@ -354,7 +353,6 @@ function LoadOptions() {
                 options[row.discord_channel] = JSON.parse(row.json.toString());
             });
             console.log("Loaded options");
-            console.log(options);
             LoadTrackedStreams();
         }
     });
