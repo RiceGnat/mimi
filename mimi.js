@@ -300,7 +300,7 @@ function PollTrackedStreams() {
                         var last = streamTracker[name].last[channelID];
                         var limit = options[channelID] ? options[channelID]["notify-limit"] : 0;
 
-                        if (limit > 0 && Date.now() - last >= limit) {
+                        if (!limit || Date.now() - last >= limit) {
                             bot.sendMessage({
                                 to: channelID,
                                 message: `<:mimiright:372499377773871115> ${stream.name} is now online!`,
