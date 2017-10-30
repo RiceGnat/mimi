@@ -143,15 +143,15 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                             {
                                 name: "Streams",
                                 value: [
-                                    "`!stream (name)`\tLook up a stream",
-                                    "`!track (name)`\tTrack a stream in this channel",
+                                    "`!stream <name>`\tLook up a stream",
+                                    "`!track <name>`\tTrack a stream in this channel",
                                     "`!tracking`\tShow a list of streams tracked in this channel"].join("\n")
                             },
                             {
                                 name: "Control",
                                 value: [
-                                    "`!set (option) (value)`",
-                                    "\t`!set notify-limit (time)[s|m|h]`\tLimit stream notifications in this channel"].join("\n")
+                                    "`!set <option> <value>`",
+                                    "\t`!set notify-limit <time)[s|m|h]`\tLimit stream notifications in this channel"].join("\n")
                             },
                             {
                                 name: "Emotes",
