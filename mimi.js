@@ -287,17 +287,6 @@ function RemoveFromStreamTracker(streamName, channelID) {
     }
 }
 
-function LoadTrackedStreams() {
-    GetTrackedStreams((error, results, fields) => {
-        if (results) {
-            results.forEach((row, index) => {
-                AddToStreamTracker(row.stream_name, row.discord_channel);
-            });
-            console.log("Loaded tracked streams");
-        }
-    });
-}
-
 function PollTrackedStreams() {
     Object.keys(streamTracker).forEach((streamName, index) => {
         var name = streamName.toLowerCase();
@@ -308,8 +297,9 @@ function PollTrackedStreams() {
             else {
                 if (!streamTracker[name].online && stream.online) {
                     streamTracker[name].channels.forEach((channelID, index) => {
+                        console.log(name + " " + channelID);
                         var last = streamTracker[name].last[channelID];
-                        var limit = options[channelID]["notify-limit"];
+                        var limit = options[channelID] ? options[channelID]["notify-limit"] : 0;
 
                         if (limit > 0 && Date.now() - last >= limit) {
                             bot.sendMessage({
@@ -329,17 +319,6 @@ function PollTrackedStreams() {
 }
 
 // Bot control
-function LoadOptions() {
-    GetOptions((error, results, fields) => {
-        if (results) {
-            results.forEach((row, index) => {
-                options[row.discord_channel] = JSON.parse(row.json.toString());
-            });
-            console.log("Loaded options");
-        }
-    });
-}
-
 function SetOption(channelID, key, value, callback) {
     switch (key) {
         case "notify-limit":
@@ -368,6 +347,29 @@ function SetOption(channelID, key, value, callback) {
 }
 
 // Loadup
-LoadTrackedStreams();
-PollTrackedStreams();
+function LoadOptions() {
+    GetOptions((error, results, fields) => {
+        if (results) {
+            results.forEach((row, index) => {
+                options[row.discord_channel] = JSON.parse(row.json.toString());
+            });
+            console.log("Loaded options");
+            console.log(options);
+            LoadTrackedStreams();
+        }
+    });
+}
+
+function LoadTrackedStreams() {
+    GetTrackedStreams((error, results, fields) => {
+        if (results) {
+            results.forEach((row, index) => {
+                AddToStreamTracker(row.stream_name, row.discord_channel);
+            });
+            console.log("Loaded tracked streams");
+            PollTrackedStreams();
+        }
+    });
+}
+
 LoadOptions();
