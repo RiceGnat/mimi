@@ -138,7 +138,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                     to: channelID,
                     embed: {
                         title: "<:mimigreetings:372499377501241355> Mimi",
-                        description: "Picarto bot",
+                        description: "Picarto bot for stream tracking. For more information, see [GitHub](https://github.com/RiceGnat/mimi/).",
                         fields: [
                             {
                                 name: "Streams",
