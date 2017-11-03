@@ -296,6 +296,8 @@ function PollTrackedStreams() {
             }
             else {
                 if (!streamTracker[name].online && stream.online) {
+                    console.log(`${stream.name} has gone online`);
+
                     streamTracker[name].channels.forEach((channelID, index) => {
                         var last = streamTracker[name].last[channelID];
                         var limit = options[channelID] ? options[channelID]["notify-limit"] : 0;
@@ -307,6 +309,9 @@ function PollTrackedStreams() {
                                 embed: BuildEmbed(stream)
                             });
                             streamTracker[name].last[channelID] = Date.now();
+                        }
+                        else {
+                            console.log(`Notification to channel ${channelID} squelched`);
                         }
                     });
                 }
