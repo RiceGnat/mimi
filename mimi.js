@@ -14,9 +14,7 @@ var bot = new Discord.Client({
 });
 
 bot.on("ready", function (evt) {
-    console.log("Connected");
-    console.log("Logged in as: ");
-    console.log(bot.username + " - (" + bot.id + ")");
+    console.log(`Connected as ${bot.username} (${bot.id})`);
 });
 
 bot.on("message", function (user, userID, channelID, message, evt) {
@@ -32,7 +30,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                         to: channelID,
                         message: !stream ? "<:mimiconfused:372499377807425566> Stream not found" : null,
                         embed: stream ? BuildEmbed(stream) : null
-                    });
+                    }, messageCallback);
                 });
                 break;
             case "track":
@@ -44,25 +42,26 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                                 message = `<:mimiscratch:372499377928798208> Already tracking ${stream.name} in this channel`;
                             }
                             else if (error) {
+                                console.log("Error trying to track stream");
                                 console.log(error);
                                 message = "<:mimiconfused:372499377807425566> Couldn't track stream";
                             }
                             else {
                                 AddToStreamTracker(stream.name, channelID);
-                                console.log(`Now tracking ${stream.name} in channel ${channelID}`);
+                                console.log(`User ${user} tracked ${stream.name} in channel ${getFullChannelName(channelID)}`);
                                 message = `<:mimigreetings:372499377501241355> Now tracking ${stream.name}`;
                             }
                             bot.sendMessage({
                                 to: channelID,
                                 message: message
-                            })
+                            }, messageCallback)
                         });
                     }
                     else {
                         bot.sendMessage({
                             to: channelID,
                             message: "<:mimiconfused:372499377807425566> Stream not found",
-                        });
+                        }, messageCallback);
                     }
                 });
                 break;
@@ -72,7 +71,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                 bot.sendMessage({
                     to: channelID,
                     message: "<:mimisad:372499377752768522> Stream untracked",
-                });
+                }, messageCallback);
                 break;
             case "tracking":
                 GetTrackedStreamsByChannel(channelID, (error, results, fields) => {
@@ -86,7 +85,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                                     bot.sendMessage({
                                         to: channelID,
                                         embed: { description: output.join("\n") }
-                                    });
+                                    }, messageCallback);
                                 }
                             }
                         }
@@ -107,12 +106,12 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                         }
                         else {
                             message = "<:mimivictory:372499377639522325> Option saved";
-                            console.log(`User ${user} set option ${key} to ${value} in channel ${channelID}`);
+                            console.log(`User ${user} set option ${key} to ${value} in channel ${getFullChannelName(channelID)}`);
                         }
                         bot.sendMessage({
                             to: channelID,
                             message: message,
-                        });
+                        }, messageCallback);
                     });
                 }
                 break;
@@ -127,7 +126,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                                 to: channelID,
                                 file: Buffer.concat(data),
                                 filename: `${args[0]}.png`
-                            });
+                            }, messageCallback);
                         });
                     }
                 });
@@ -161,7 +160,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                         ],
                         footer: { text: `Developed by RiceGnat#9420`}
                     }
-                });
+                }, messageCallback);
                 break;
         }
     }
@@ -172,6 +171,26 @@ bot.on("disconnect", function (errMsg, code) {
     console.log("Reconnecting...");
     bot.connect();
 });
+
+function messageCallback(error, response) {
+    if (error) {
+        console.log("Error sending message");
+        console.log(error);
+        console.log(response);
+    }
+}
+
+function getChannelName(channelID) {
+    return bot.channels[channelID].name;
+}
+
+function getServerNameForChannel(channelID) {
+    return bot.servers[bot.channels[channelID].guild_id].name;
+}
+
+function getFullChannelName(channelID) {
+    return getServerNameForChannel(channelID) + "/" + getChannelName(channelID);
+}
 
 // Picarto API calls
 function GetStreamInfo(name, callback) {
@@ -186,7 +205,7 @@ function GetStreamInfo(name, callback) {
             });
         }
         else {
-            console.log(`Stream request for ${name} failed.`);
+            console.log(`Stream request for ${name} failed`);
             callback(null);
         }
     });
@@ -269,7 +288,7 @@ function SaveOptions(channelID) {
 function AddToStreamTracker(streamName, channelID) {
     var name = streamName.toLowerCase();
     if (!streamTracker[name])
-        streamTracker[name] = { channels: [], online: false, last: {} };
+        streamTracker[name] = { channels: [], online: true, last: {} };
     if (streamTracker[name].channels.indexOf(channelID) == -1) {
         streamTracker[name].channels.push(channelID);
         streamTracker[name].last[channelID] = 0;
@@ -307,11 +326,11 @@ function PollTrackedStreams() {
                                 to: channelID,
                                 message: `<:mimiright:372499377773871115> ${stream.name} is now online!`,
                                 embed: BuildEmbed(stream)
-                            });
+                            }, messageCallback);
                             streamTracker[name].last[channelID] = Date.now();
                         }
                         else {
-                            console.log(`Notification to channel ${channelID} squelched`);
+                            console.log(`Notification to channel ${getFullChannelName(channelID)} squelched`);
                         }
                     });
                 }
