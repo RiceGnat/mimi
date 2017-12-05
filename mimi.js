@@ -1,7 +1,7 @@
 var Discord = require("discord.io");
 var http = require("https");
 var mysql = require("mysql");
-var auth = process.env.BOT_TOKEN ? null : require("./auth.json");
+var auth = require("./auth.json");
 const config = require("./package.json").config;
 
 var streamTracker = {};
@@ -288,7 +288,7 @@ function SaveOptions(channelID) {
 function AddToStreamTracker(streamName, channelID) {
     var name = streamName.toLowerCase();
     if (!streamTracker[name])
-        streamTracker[name] = { channels: [], online: true, last: {} };
+        streamTracker[name] = { channels: [], online: false, last: {} };
     if (streamTracker[name].channels.indexOf(channelID) == -1) {
         streamTracker[name].channels.push(channelID);
         streamTracker[name].last[channelID] = 0;
