@@ -243,8 +243,8 @@ function BuildEmbed(stream) {
         url: `http://picarto.tv/${stream.name}`,
         description: stream.title + "\t" + (stream.gaming ? " :video_game:" : "") + (stream.adult ? " :underage:" : "") + (stream.commissions ? " :paintbrush:" : "") + (stream.private ? " :lock:" : ""),
         fields: fields,
-        thumbnail: { url: `https://picarto.tv/user_data/usrimg/${stream.name.toLowerCase()}/dsdefault.jpg` },
-        image: stream.online ? { url: `https://thumb-us-east1.picarto.tv/thumbnail/${stream.name}.jpg?${Math.trunc(Date.now()/1000)}` } : null,
+        thumbnail: { url: stream.avatar },
+        image: stream.online ? { url: `${stream.thumbnails.web}?${Date.now()}` } : null,
         footer: !stream.online && last.valueOf() != 0 ? { text: `Last online on ${last.toDateString()}` } : null
     };
 }
@@ -311,7 +311,7 @@ function PollTrackedStreams() {
         var name = streamName.toLowerCase();
         GetStreamInfo(streamName, (stream) => {
             if (!stream) {
-                streamTracker[name].online = false;
+                //streamTracker[name].online = false;
             }
             else {
                 if (!streamTracker[name].online && stream.online) {
