@@ -135,8 +135,9 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                             {
                                 name: "Control",
                                 value: [
-                                    "`!set <option> <value>`",
-                                    "\t`!set notify-limit <time)[s|m|h]`\tLimit stream notifications in this channel"].join("\n")
+                                    "`!set <option> <value>`\tSet options (per channel)",
+                                    "\t`!set notify-limit <time>[s|m|h]`\tLimit repeated notifications",
+                                    "\t`!set notify-private on|off`\tPrivate stream notifications"].join("\n")
                             },
                             {
                                 name: "Emotes",
@@ -167,11 +168,21 @@ function messageCallback(error, response) {
 }
 
 function getChannelName(channelID) {
-    return bot.channels[channelID].name;
+    try {
+        return bot.channels[channelID].name;
+    }
+    catch (ex) {
+        return "";
+    }
 }
 
 function getServerNameForChannel(channelID) {
-    return bot.servers[bot.channels[channelID].guild_id].name;
+    try {
+        return bot.servers[bot.channels[channelID].guild_id].name;
+    }
+    catch (ex) {
+        return "";
+    }
 }
 
 function getFullChannelName(channelID) {
@@ -287,7 +298,7 @@ function PollTrackedStreams() {
                         var last = streamTracker[name].last[channelID];
                         var limit = options[channelID] ? options[channelID]["notify-limit"] : 0;
 
-                        if (!limit || Date.now() - last >= limit) {
+                        if ((!limit || Date.now() - last >= limit) && (!stream.private || options[channelID]["notify-private"] === true)) {
                             bot.sendMessage({
                                 to: channelID,
                                 message: `<:mimiright:372499377773871115> ${stream.name} is now online!`,
@@ -328,6 +339,11 @@ function SetOption(channelID, key, value, callback) {
             if (!options[channelID]) options[channelID] = {};
             options[channelID][key] = duration;
             SaveOptions(channelID);
+            break;
+        case "notify-private":
+            if (value.toLowerCase() === "on") options[channelID][key] = true;
+            else if (value.toLowerCase() === "off") options[channelID][key] = false;
+            else return callback(`Valid settings are "on" and "off"`);
             break;
         default:
             return callback("Unrecognized option");
