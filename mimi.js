@@ -1,5 +1,5 @@
 var Discord = require("discord.io");
-var Picarto = require("./picarto.js");
+var http = require("https");
 var mysql = require("mysql");
 var auth = require("./auth.json");
 const config = require("./package.json").config;
@@ -25,7 +25,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
         args = args.splice(1);
         switch (cmd) {
             case "stream":
-                Picarto.GetStreamInfo(args[0], (stream) => {
+                GetStreamInfo(args[0], (stream) => {
                     bot.sendMessage({
                         to: channelID,
                         message: !stream ? "<:mimiconfused:372499377807425566> Stream not found" : null,
@@ -34,7 +34,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                 });
                 break;
             case "track":
-                Picarto.GetStreamInfo(args[0], (stream) => {
+                GetStreamInfo(args[0], (stream) => {
                     if (stream) {
                         TrackStream(stream.name, channelID, (error) => {
                             var message;
@@ -90,7 +90,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                             }
                         }
                         results.forEach((row, index) => {
-                            Picarto.GetStreamInfo(row.stream_name, buildOut());
+                            GetStreamInfo(row.stream_name, buildOut());
                         });
                     }
                 });
@@ -116,7 +116,21 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                 }
                 break;
             case "mimi":
-                Picarto.GetEmote(args[0], messageCallback);
+                var req = http.get(`https://picarto.tv/images/chat/emoticons/${args[0]}.png`, (res) => {
+                    if (res.statusCode == 200) {
+                        var data = [];
+                        res.on("data", (chunk) => {
+                            data.push(chunk);
+                        }).on("end", () => {
+                            bot.uploadFile({
+                                to: channelID,
+                                file: Buffer.concat(data),
+                                filename: `${args[0]}.png`
+                            }, messageCallback);
+                        });
+                    }
+                });
+                req.end();
                 break;
             case "help":
                 bot.sendMessage({
@@ -135,9 +149,8 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                             {
                                 name: "Control",
                                 value: [
-                                    "`!set <option> <value>`\tSet options (per channel)",
-                                    "\t`!set notify-limit <time>[s|m|h]`\tLimit repeated notifications",
-                                    "\t`!set notify-private on|off`\tPrivate stream notifications"].join("\n")
+                                    "`!set <option> <value>`",
+                                    "\t`!set notify-limit <time)[s|m|h]`\tLimit stream notifications in this channel"].join("\n")
                             },
                             {
                                 name: "Emotes",
@@ -168,25 +181,35 @@ function messageCallback(error, response) {
 }
 
 function getChannelName(channelID) {
-    try {
-        return bot.channels[channelID].name;
-    }
-    catch (ex) {
-        return "";
-    }
+    return bot.channels[channelID].name;
 }
 
 function getServerNameForChannel(channelID) {
-    try {
-        return bot.servers[bot.channels[channelID].guild_id].name;
-    }
-    catch (ex) {
-        return "";
-    }
+    return bot.servers[bot.channels[channelID].guild_id].name;
 }
 
 function getFullChannelName(channelID) {
     return getServerNameForChannel(channelID) + "/" + getChannelName(channelID);
+}
+
+// Picarto API calls
+function GetStreamInfo(name, callback) {
+    var req = http.get(`https://api.picarto.tv/v1/channel/name/${name}`, (res) => {
+        if (res.statusCode == 200) {
+            var data = "";
+            res.on("data", (chunk) => {
+                data += chunk;
+            }).on("end", () => {
+                var stream = JSON.parse(data);
+                callback(stream);
+            });
+        }
+        else {
+            console.log(`Stream request for ${name} failed`);
+            callback(null);
+        }
+    });
+    req.end();
 }
 
 function BuildEmbed(stream) {
@@ -286,7 +309,7 @@ function RemoveFromStreamTracker(streamName, channelID) {
 function PollTrackedStreams() {
     Object.keys(streamTracker).forEach((streamName, index) => {
         var name = streamName.toLowerCase();
-        Picarto.GetStreamInfo(streamName, (stream) => {
+        GetStreamInfo(streamName, (stream) => {
             if (!stream) {
                 //streamTracker[name].online = false;
             }
@@ -298,7 +321,7 @@ function PollTrackedStreams() {
                         var last = streamTracker[name].last[channelID];
                         var limit = options[channelID] ? options[channelID]["notify-limit"] : 0;
 
-                        if ((!limit || Date.now() - last >= limit) && (!stream.private || options[channelID]["notify-private"] === true)) {
+                        if (!limit || Date.now() - last >= limit) {
                             bot.sendMessage({
                                 to: channelID,
                                 message: `<:mimiright:372499377773871115> ${stream.name} is now online!`,
@@ -339,11 +362,6 @@ function SetOption(channelID, key, value, callback) {
             if (!options[channelID]) options[channelID] = {};
             options[channelID][key] = duration;
             SaveOptions(channelID);
-            break;
-        case "notify-private":
-            if (value.toLowerCase() === "on") options[channelID][key] = true;
-            else if (value.toLowerCase() === "off") options[channelID][key] = false;
-            else return callback(`Valid settings are "on" and "off"`);
             break;
         default:
             return callback("Unrecognized option");
