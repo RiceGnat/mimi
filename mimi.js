@@ -1,5 +1,5 @@
 var Discord = require("discord.io");
-var http = require("https");
+var Picarto = require("./picarto.js");
 var mysql = require("mysql");
 var auth = require("./auth.json");
 const config = require("./package.json").config;
@@ -25,7 +25,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
         args = args.splice(1);
         switch (cmd) {
             case "stream":
-                GetStreamInfo(args[0], (stream) => {
+                Picarto.GetStreamInfo(args[0], (stream) => {
                     bot.sendMessage({
                         to: channelID,
                         message: !stream ? "<:mimiconfused:372499377807425566> Stream not found" : null,
@@ -34,7 +34,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                 });
                 break;
             case "track":
-                GetStreamInfo(args[0], (stream) => {
+                Picarto.GetStreamInfo(args[0], (stream) => {
                     if (stream) {
                         TrackStream(stream.name, channelID, (error) => {
                             var message;
@@ -90,7 +90,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                             }
                         }
                         results.forEach((row, index) => {
-                            GetStreamInfo(row.stream_name, buildOut());
+                            Picarto.GetStreamInfo(row.stream_name, buildOut());
                         });
                     }
                 });
@@ -116,21 +116,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                 }
                 break;
             case "mimi":
-                var req = http.get(`https://picarto.tv/images/chat/emoticons/${args[0]}.png`, (res) => {
-                    if (res.statusCode == 200) {
-                        var data = [];
-                        res.on("data", (chunk) => {
-                            data.push(chunk);
-                        }).on("end", () => {
-                            bot.uploadFile({
-                                to: channelID,
-                                file: Buffer.concat(data),
-                                filename: `${args[0]}.png`
-                            }, messageCallback);
-                        });
-                    }
-                });
-                req.end();
+                Picarto.GetEmote(args[0], messageCallback);
                 break;
             case "help":
                 bot.sendMessage({
@@ -190,26 +176,6 @@ function getServerNameForChannel(channelID) {
 
 function getFullChannelName(channelID) {
     return getServerNameForChannel(channelID) + "/" + getChannelName(channelID);
-}
-
-// Picarto API calls
-function GetStreamInfo(name, callback) {
-    var req = http.get(`https://api.picarto.tv/v1/channel/name/${name}`, (res) => {
-        if (res.statusCode == 200) {
-            var data = "";
-            res.on("data", (chunk) => {
-                data += chunk;
-            }).on("end", () => {
-                var stream = JSON.parse(data);
-                callback(stream);
-            });
-        }
-        else {
-            console.log(`Stream request for ${name} failed`);
-            callback(null);
-        }
-    });
-    req.end();
 }
 
 function BuildEmbed(stream) {
@@ -309,7 +275,7 @@ function RemoveFromStreamTracker(streamName, channelID) {
 function PollTrackedStreams() {
     Object.keys(streamTracker).forEach((streamName, index) => {
         var name = streamName.toLowerCase();
-        GetStreamInfo(streamName, (stream) => {
+        Picarto.GetStreamInfo(streamName, (stream) => {
             if (!stream) {
                 //streamTracker[name].online = false;
             }
