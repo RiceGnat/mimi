@@ -345,6 +345,7 @@ function SetOption(channelID, key, value, callback) {
             if (value.toLowerCase() === "on") options[channelID][key] = true;
             else if (value.toLowerCase() === "off") options[channelID][key] = false;
             else return callback("Specify on/off");
+            break;
         default:
             return callback("Unrecognized option");
     }
