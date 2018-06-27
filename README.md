@@ -32,6 +32,11 @@ Example values: `30s, 15m, 1h, 0`
 Mimi will only send online notifications once in the given interval for each tracked stream. The interval will apply to all streams tracked in the channel. Useful for when streamers have connectivity issues.
 
 If no unit is provided, seconds will be used by default. Set this option to `0` to disable the limit.
+##### Turn notifications on/off for private streams:
+```
+!set notify-private on|off
+```
+Default behavior is `off`.
 ### Emotes
 #### Use Mimi emotes from Picarto chat:
 ```
