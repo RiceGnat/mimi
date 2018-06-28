@@ -117,7 +117,13 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                 }
                 break;
             case "mimi":
-                Picarto.GetEmote(args[0], messageCallback);
+                Picarto.GetEmote(args[0], function (data) {
+                    bot.uploadFile({
+                        to: channelID,
+                        file: Buffer.concat(data),
+                        filename: `${args[0]}.png`
+                    }, messageCallback);
+                });
                 break;
             case "help":
                 bot.sendMessage({

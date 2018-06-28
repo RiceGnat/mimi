@@ -29,11 +29,7 @@ function GetEmote(name, callback) {
             res.on("data", (chunk) => {
                 data.push(chunk);
             }).on("end", () => {
-                bot.uploadFile({
-                    to: channelID,
-                    file: Buffer.concat(data),
-                    filename: `${name}.png`
-                }, callback);
+                callback(data);
             });
         }
     });
