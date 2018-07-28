@@ -137,6 +137,7 @@ bot.on("message", function (user, userID, channelID, message, evt) {
                                 value: [
                                     "`!stream <name>`\tLook up a stream",
                                     "`!track <name>`\tTrack a stream in this channel",
+                                    "`!untrack <name>`\tUntrack a stream for this channel",
                                     "`!tracking`\tShow a list of streams tracked in this channel"].join("\n")
                             },
                             {

@@ -14,6 +14,10 @@ Commands with persistence (such as tracking and options) are specific to the cha
 ```
 !track <name>
 ```
+#### Untrack a stream for the current channel:
+```
+!untrack <name>
+```
 #### Show a list of streams tracked in the current channel:
 ```
 !tracking
