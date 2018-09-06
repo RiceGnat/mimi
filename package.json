@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "discord.io": "github:izy521/discord.io",
-    "mysql": "^2.14.1"
+    "dotenv": "^6.0.0",
+    "mysql": "^2.14.1",
+    "request": "^2.88.0"
   },
   "config": {
     "owner": "108470819088248832"

@@ -3,3 +3,4 @@ node_modules/
 
 # Authentication token
 auth.json
+.env

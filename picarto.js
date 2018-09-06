@@ -1,40 +1,29 @@
-// Picarto API calls
+const request = require("request");
+const host = "https://api.picarto.tv/v1";
 
-const http = require("https");
-const endpoint = "https://api.picarto.tv/v1/";
-
-function GetStreamInfo(name, callback) {
-    var req = http.get(`${endpoint}channel/name/${name}`, (res) => {
-        if (res.statusCode == 200) {
-            var data = "";
-            res.on("data", (chunk) => {
-                data += chunk;
-            }).on("end", () => {
-                var stream = JSON.parse(data);
-                callback(stream);
-            });
-        }
-        else {
-            console.log(`Stream request for ${name} failed`);
-            callback(null);
-        }
+function GetStreamInfo(name) {
+    return new Promise((resolve, reject) => {
+        request.get({
+            url: `${host}/channel/name/${name}`,
+            json: true
+        }, (err, resp, body) => {
+            if (err || resp.statusCode !== 200) return reject(err ? err : resp.statusCode);
+            resolve(body);
+        });
     });
-    req.end();
 }
 
-function GetEmote(name, callback) {
-    var req = http.get(`https://picarto.tv/images/chat/emoticons/${name}.png`, (res) => {
-        if (res.statusCode == 200) {
-            var data = [];
-            res.on("data", (chunk) => {
-                data.push(chunk);
-            }).on("end", () => {
-                callback(data);
-            });
-        }
+function GetEmote(name) {
+    return new Promise((resolve, reject) => {
+        request.get({
+            url: `https://picarto.tv/images/chat/emoticons/${name}.png`,
+            encoding: null
+        },(err, resp, body) => {
+            if (err || resp.statusCode !== 200) return reject(err ? err : resp.statusCode);
+            resolve(body);
+        });
     });
-    req.end();
 }
 
-module.exports.GetStreamInfo = GetStreamInfo;
-module.exports.GetEmote = GetEmote;
+module.exports.getStreamInfo = GetStreamInfo;
+module.exports.getEmote = GetEmote;
