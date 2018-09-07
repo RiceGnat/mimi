@@ -47,3 +47,9 @@ Default behavior is `off`.
 !mimi <emote>
 ```
 Emote names are the same as in Picarto chat (but without the prefix). Example: `!mimi angry`
+### Help
+#### Show usage and bot information:
+```
+!help [<command>]
+```
+If `<command>` is specified, only usage information for that command will be shown. Otherwise, all commands and general bot info will be shown.

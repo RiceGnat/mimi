@@ -4,9 +4,25 @@ const db = require("./mimi-db");
 class StreamTracker {
     constructor(options) {
         this.options = Object.assign({
-            interval: 1000
+            interval: 100,
+            pollTime: 5000,
+            batchSize: 1
         }, options);
+        
+        console.log("Tracker options set:");
+        console.log(`\tRequest interval: ${this.options.interval}ms`);
+        console.log(`\tMinimum polling loop time: ${this.options.pollTime}ms`);
+        console.log(`\tRequest batch size: ${this.options.batchSize}`);
+
         const tracker = {};
+        var defaultHandler;
+
+        this.setDefaultHandler = handler => {
+            if (typeof handler !== "function")
+                throw "Handler must be a function";
+
+            defaultHandler = handler;
+        }
         
         this.track = (streamName, key, handler) => {
             /* Picarto stream names are case insensitive, but stream names are stored
@@ -16,9 +32,6 @@ class StreamTracker {
              * tracker object will use lowercase stream names.
              */
             const name = streamName.toLowerCase();
-    
-            if (typeof handler !== "function")
-                throw "Handler must be a function";
     
             // Check that the stream exists
             return picarto.getStreamInfo(name)
@@ -42,7 +55,7 @@ class StreamTracker {
         this.subscribe = (streamName, key, handler) => {
             const name = streamName.toLowerCase();
     
-            if (typeof handler !== "function")
+            if (handler && typeof handler !== "function")
                 throw "Handler must be a function";
 
             // Create entry in tracker if it doesn't exist yet
@@ -80,37 +93,44 @@ class StreamTracker {
         }
 
         const check = (i) => {
-            const names = Object.keys(tracker) 
-            const name = names[i];
+            const names = Object.keys(tracker) ;
+            const size = this.options.batchSize ? this.options.batchSize : Object.keys(tracker).length;
+            const batch = names.slice(i, i + size);
 
-            // Check stream
-            return picarto.getStreamInfo(name)
-            .then(stream => {
-                // Notify on positive latch
-                if (!tracker[name].online && stream.online) {
-                    console.log(`${stream.name} has gone online`);
-        
-                    // Go through all tracker subscriptions for the stream
-                    Object.keys(tracker[name].subs).forEach(key => {
-                        // Call handler
-                        if (tracker[name].subs[key].handler(stream, key, tracker[name].subs[key].last))
+            return Promise.all(batch.map(name =>
+                // Check stream
+                picarto.getStreamInfo(name)
+                .then(stream => {
+                    // Notify on positive latch
+                    if (!tracker[name].online && stream.online) {
+                        console.log(`${stream.name} has gone online`);
+            
+                        // Go through all tracker subscriptions for the stream
+                        Object.keys(tracker[name].subs).forEach(key => {
+                            // Call specific handler if it exists, else call default handler
+                            const updateLast = tracker[name].subs[key].handler ?
+                                tracker[name].subs[key].handler(stream, key, tracker[name].subs[key].last)
+                                : defaultHandler(stream, key, tracker[name].subs[key].last);
+                            
                             // If the handler returns true, update last
-                            tracker[name].subs[key].last = Date.now();
-                    });
-                }
-                tracker[name].online = stream.online;
-            }, error => {
-                console.log(`Stream request for ${name} failed: ${error}`);
-                delete tracker[name];
-                i--;
-                console.log(`Removed ${name} from the tracker`);
-            })
+                            if (updateLast)
+                                tracker[name].subs[key].last = Date.now();
+                        });
+                    }
+                    tracker[name].online = stream.online;
+                }, error => {
+                    console.log(`Stream request for ${name} failed: ${error}`);
+                    delete tracker[name];
+                    i--;
+                    console.log(`Removed ${name} from the tracker`);
+                })
+            ))
             .then(() => {
                 // Wait for the interval and check next stream
-                if (i < names.length - 1)
+                if (i < names.length - size)
                     return new Promise(resolve => {
                         setTimeout(() => {
-                            resolve(check(i + 1));
+                            resolve(check(i + size));
                         }, this.options.interval);
                     });
             });
@@ -119,17 +139,22 @@ class StreamTracker {
         var timer = null;
 
         const poll = () => {
+            const tic = Date.now();
             check(0)
             .then(() => {
+                const toc = Date.now();
+                const wait = Math.max(this.options.pollTime - (toc - tic), this.options.interval);
+                console.log(`Polling loop completed in ${(toc - tic) / 1000}s; waiting for ${wait / 1000}s.`);
                 timer = setTimeout(() => {
                     poll();
-                }, this.options.interval);
+                }, Math.max(this.options.pollTime - (toc - tic), this.options.interval));
             });
         }
 
 
         this.start = () => {
             if (timer === null) {
+                console.log("Stream tracker started");
                 timer = 0;
                 poll();
             }
@@ -137,6 +162,7 @@ class StreamTracker {
         
         this.stop = () => {
             if (timer !== null) {
+                console.log("Stream tracker stopped");
                 clearInterval(timer);
                 timer = null;
             }
