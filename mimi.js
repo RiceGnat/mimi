@@ -5,8 +5,8 @@ const cmd = require("./mimi-cmd");
 const db = require("./mimi-db");
 const format = require("./mimi-format");
 const tracker = require("./tracker").new({
-    interval: 1000,
-    pollTime: 10000,
+    interval: 50,
+    pollTime: 5000,
     batchSize: 20
 });
 const options = {};
@@ -17,7 +17,7 @@ const bot = new Discord.Client({
 });
 
 bot.on("ready", function (evt) {
-    console.log(`Connected as ${bot.username} (${bot.id})`);
+    console.log(`Connected to Discord as ${bot.username} (${bot.id})`);
 });
 
 bot.on("disconnect", function (errMsg, code) {
@@ -87,7 +87,10 @@ Promise.all([
         results.forEach(row => {
             tracker.subscribe(row.stream_name, row.discord_channel);
         })
-        console.log("Tracked streams loaded");
+        const streams = [...new Set(results.map(row => row.stream_name))];
+        const channels = [...new Set(results.map(row => row.discord_channel))];
+        console.log("Tracked streams loaded:");
+        console.log(`\t${streams.length} streams tracked in ${channels.length} channels`);
     })
 ]).then(() => {
     tracker.start();

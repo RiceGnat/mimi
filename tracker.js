@@ -144,7 +144,7 @@ class StreamTracker {
             .then(() => {
                 const toc = Date.now();
                 const wait = Math.max(this.options.pollTime - (toc - tic), this.options.interval);
-                console.log(`Polling loop completed in ${(toc - tic) / 1000}s; waiting for ${wait / 1000}s.`);
+                console.log(`Polling loop completed in ${(toc - tic) / 1000}s; waiting for ${wait / 1000}s`);
                 timer = setTimeout(() => {
                     poll();
                 }, Math.max(this.options.pollTime - (toc - tic), this.options.interval));
