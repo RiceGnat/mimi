@@ -9,7 +9,7 @@ function ParseCommand(str, sender) {
     var cmd = args[0];
     args = args.slice(1);
 
-    return Promise.resolve(commands[cmd].handler(sender, ...args));
+    return Promise.resolve(commands[cmd] ? commands[cmd].handler(sender, ...args) : null);
 }
 
 function cmd(name, format, desc, category, handler, sub) {

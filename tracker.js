@@ -1,5 +1,6 @@
 const picarto = require("./picarto");
 const db = require("./mimi-db");
+require("dotenv").load();
 
 class StreamTracker {
     constructor(options) {
@@ -10,9 +11,9 @@ class StreamTracker {
         }, options);
         
         console.log("Tracker options set:");
-        console.log(`\tRequest interval: ${this.options.interval}ms`);
-        console.log(`\tMinimum polling loop time: ${this.options.pollTime}ms`);
-        console.log(`\tRequest batch size: ${this.options.batchSize}`);
+        console.log(`  Request interval: ${this.options.interval}ms`);
+        console.log(`  Minimum polling loop time: ${this.options.pollTime}ms`);
+        console.log(`  Request batch size: ${this.options.batchSize}`);
 
         const tracker = {};
         var defaultHandler;
@@ -120,9 +121,11 @@ class StreamTracker {
                     tracker[name].online = stream.online;
                 }, error => {
                     console.log(`Stream request for ${name} failed: ${error}`);
-                    delete tracker[name];
-                    i--;
-                    console.log(`Removed ${name} from the tracker`);
+                    if (error === 404) {
+                        delete tracker[name];
+                        i--;
+                        console.log(`Removed ${name} from the tracker`);
+                    }
                 })
             ))
             .then(() => {
@@ -144,7 +147,8 @@ class StreamTracker {
             .then(() => {
                 const toc = Date.now();
                 const wait = Math.max(this.options.pollTime - (toc - tic), this.options.interval);
-                console.log(`Polling loop completed in ${(toc - tic) / 1000}s; waiting for ${wait / 1000}s`);
+                if (process.env.NODE_ENV === "dev")
+                    console.log(`Polling loop completed in ${(toc - tic) / 1000}s; waiting for ${wait / 1000}s`);
                 timer = setTimeout(() => {
                     poll();
                 }, Math.max(this.options.pollTime - (toc - tic), this.options.interval));

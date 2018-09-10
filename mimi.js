@@ -1,6 +1,4 @@
 const Discord = require("discord.io");
-require("dotenv").load();
-
 const cmd = require("./mimi-cmd");
 const db = require("./mimi-db");
 const format = require("./mimi-format");
@@ -9,6 +7,9 @@ const tracker = require("./tracker").new({
     pollTime: 5000,
     batchSize: 20
 });
+
+require("dotenv").load();
+
 const options = {};
 
 const bot = new Discord.Client({
@@ -38,6 +39,8 @@ bot.on("message", function (user, userId, channelId, message, evt) {
         })
         .then(msg => {
             if (msg) bot.sendMessage(msg);
+        }, error => {
+            console.log(error);
         });
     }
 });
@@ -90,7 +93,7 @@ Promise.all([
         const streams = [...new Set(results.map(row => row.stream_name))];
         const channels = [...new Set(results.map(row => row.discord_channel))];
         console.log("Tracked streams loaded:");
-        console.log(`\t${streams.length} streams tracked in ${channels.length} channels`);
+        console.log(`  ${streams.length} streams tracked in ${channels.length} channels`);
     })
 ]).then(() => {
     tracker.start();
