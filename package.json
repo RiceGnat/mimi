@@ -8,8 +8,8 @@
   "scripts": {
     "start": "node mimi.js"
   },
-  "engines" : {
-    "node" : ">=7.0"
+  "engines": {
+    "node": ">=7.0"
   },
   "dependencies": {
     "discord.io": "github:izy521/discord.io",
