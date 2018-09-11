@@ -42,7 +42,7 @@ function cmdHelp(command, parent) {
     if (parent) format.push(parent);
     format.push(command.name);
     if (command.format) format.push(command.format);
-    return `\`${parent ? "\t" : ""}!${format.join(" ")}\`\t${command.description}`;
+    return `\`!${format.join(" ")}\`\t${command.description}`;
 }
 
 cmd("stream",
@@ -183,6 +183,16 @@ subcmd("notify-private",
             else throw "Specify on/off";
        });
 
+subcmd("notify-nsfw-preview",
+       "on|off",
+       "NSFW stream notification previews",
+       "set",
+       (sender, value) => {
+            if (value.toLowerCase() === "on") return true;
+            else if (value.toLowerCase() === "off") return false;
+            else throw "Specify on/off";
+       });
+
 cmd("mimi",
     "<emote>",
     "Mimi emotes from Picarto chat",
@@ -212,13 +222,13 @@ cmd("help",
                 if (subcommands.length > 0) {
                     subcommands.forEach(subcommand => {
                         fields[command.category].push(`${cmdHelp(subcommand, command.name)}`);
-                    })
+                    });
                 }
             });
             return {
                 to: sender.channelId,
                 embed: {
-                    title: "<:mimigreetings:372499377501241355> Mimi",
+                    title: `<:mimigreetings:372499377501241355> Mimi v${require("./package.json").version}`,
                     description: "Picarto bot for stream tracking. For more information, see [GitHub](https://github.com/RiceGnat/mimi/).",
                     fields: Object.entries(fields).map(([key, value]) => ({
                         name: key,
@@ -226,7 +236,7 @@ cmd("help",
                     })),
                     footer: { text: `Developed by RiceGnat#9420` }
                 }
-            }
+            };
         }
         else return { 
                 to: sender.channelId,
@@ -238,4 +248,4 @@ console.log("Commands registered");
 
 module.exports = {
     parse: ParseCommand
-}
+};

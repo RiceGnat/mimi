@@ -61,11 +61,12 @@ tracker.setDefaultHandler((stream, channelId, last) => {
     // Make sure Mimi is still in the channel
     if (bot.channels[channelId]) {
         // Check channel's notify settings
-        if ((!limit || Date.now() - last >= limit) && (!stream.private || options[channelId]["notify-private"] === true)) {
+        if ((!limit || Date.now() - last >= limit) &&
+            (!stream.private || options[channelId]["notify-private"] === true)) {
             sendMessage({
                 to: channelId,
                 message: `<:mimiright:372499377773871115> ${stream.name} is now online!`,
-                embed: format.stream(stream)
+                embed: format.stream(stream, stream.adult && options[channelId]["notify-nsfw-preview"] === false)
             });
             return true;
         }

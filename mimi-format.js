@@ -1,4 +1,4 @@
-function BuildEmbed(stream) {
+function BuildEmbed(stream, hideThumb) {
     var last = new Date(stream.last_live);
     var multistreamers = [];
     stream.multistream.forEach((element, index) => {
@@ -30,7 +30,7 @@ function BuildEmbed(stream) {
         description: stream.title + "\t" + (stream.gaming ? " :video_game:" : "") + (stream.adult ? " :underage:" : "") + (stream.commissions ? " :paintbrush:" : "") + (stream.private ? " :lock:" : ""),
         fields: fields,
         thumbnail: { url: stream.avatar },
-        image: stream.online ? { url: `${stream.thumbnails.web}?${Date.now()}` } : null,
+        image: stream.online && !hideThumb ? { url: `${stream.thumbnails.web}?${Date.now()}` } : null,
         footer: !stream.online && last.valueOf() != 0 ? { text: `Last online on ${last.toDateString()}` } : null
     };
 }
