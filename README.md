@@ -41,6 +41,11 @@ If no unit is provided, seconds will be used by default. Set this option to `0` 
 !set notify-private on|off
 ```
 Default behavior is `off`.
+##### Turn previews on/off for NSFW stream notifications:
+```
+!set notify-nsfw-preview on|off
+```
+Default behavior is `off`.
 ### Emotes
 #### Use Mimi emotes from Picarto chat:
 ```
