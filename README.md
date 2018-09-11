@@ -45,7 +45,7 @@ Default behavior is `off`.
 ```
 !set notify-nsfw-preview on|off
 ```
-Default behavior is `off`.
+Default behavior is `on`.
 ### Emotes
 #### Use Mimi emotes from Picarto chat:
 ```
