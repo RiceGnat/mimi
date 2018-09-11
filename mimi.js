@@ -19,6 +19,8 @@ const bot = new Discord.Client({
 
 bot.on("ready", function (evt) {
     console.log(`Connected to Discord as ${bot.username} (${bot.id})`);
+    console.log("in the following servers:")
+    Object.values(bot.servers).forEach(server => console.log(`  ${server.name}`));
 });
 
 bot.on("disconnect", function (errMsg, code) {
@@ -57,16 +59,18 @@ function sendMessage(msg) {
 
 tracker.setDefaultHandler((stream, channelId, last) => {
     const limit = options[channelId] ? options[channelId]["notify-limit"] : 0;
+    const showPrivate = options[channelId] ? options[channelId]["notify-private"] : false;
+    const hideNsfw = options[channelId] ? options[channelId]["notify-nsfw-preview"] === false : false;
 
     // Make sure Mimi is still in the channel
     if (bot.channels[channelId]) {
         // Check channel's notify settings
         if ((!limit || Date.now() - last >= limit) &&
-            (!stream.private || options[channelId]["notify-private"] === true)) {
+            (!stream.private || showPrivate)) {
             sendMessage({
                 to: channelId,
                 message: `<:mimiright:372499377773871115> ${stream.name} is now online!`,
-                embed: format.stream(stream, stream.adult && options[channelId]["notify-nsfw-preview"] === false)
+                embed: format.stream(stream, stream.adult && hideNsfw)
             });
             return true;
         }
