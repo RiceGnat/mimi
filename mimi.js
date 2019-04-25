@@ -19,8 +19,7 @@ const bot = new Discord.Client({
 
 bot.on("ready", function (evt) {
     console.log(`Connected to Discord as ${bot.username} (${bot.id})`);
-    console.log("in the following servers:")
-    Object.values(bot.servers).forEach(server => console.log(`  ${server.name}`));
+    console.log(`Mimi is in ${Object.entries(bot.servers).length} servers`);
 });
 
 bot.on("disconnect", function (errMsg, code) {
