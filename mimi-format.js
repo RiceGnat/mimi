@@ -1,12 +1,12 @@
 function BuildEmbed(stream, hideThumb) {
-    var last = new Date(stream.last_live);
-    var multistreamers = [];
+    let last = new Date(stream.last_live);
+    let multistreamers = [];
     stream.multistream.forEach((element, index) => {
         if (element.name != stream.name) {
             multistreamers.push(element.name + (element.online ? " **(online)**" : " *(offline)*") + (element.adult ? " :underage:" : ""));
         }
     });
-    var fields = [
+    let fields = [
         {
             name: "Status",
             value: stream.online ? "Online" : "Offline",

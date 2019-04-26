@@ -118,10 +118,10 @@ function setup(cmd) {
         "set",
         (context, value) => {
                 if (!value) throw "Specify a time (eg 30s, 15m, 1h)";
-                var match = value.toLowerCase().match(/^(\d+)([hms]{0,1})$/);
+                let match = value.toLowerCase().match(/^(\d+)([hms]{0,1})$/);
                 if (!match) throw "Invalid time specified";
-                var duration = match[1];
-                var unit = match[2];
+                let duration = match[1];
+                let unit = match[2];
                 if (!unit) unit = "s";
                 switch (unit) {
                     case "h":
@@ -174,7 +174,7 @@ function setup(cmd) {
         "Help",
         (context, name) => {
             if (!name) {
-                var fields = {};
+                let fields = {};
                 Object.values(cmd.list).forEach(command => {
                     if (!fields[command.category]) fields[command.category] = [];
 

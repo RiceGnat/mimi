@@ -40,7 +40,7 @@ function GetOptions() {
 }
 
 function SaveOptions(channelID, options) {
-    var optionStr = JSON.stringify(options);
+    const optionStr = JSON.stringify(options);
     return queryPromise(`insert into options (discord_channel, json) values ("${channelID}", ?) on duplicate key update json=?;`, [optionStr, optionStr]);
 }
 

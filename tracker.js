@@ -16,7 +16,7 @@ class StreamTracker {
         console.log(`  Request batch size: ${this.options.batchSize}`);
 
         const tracker = {};
-        var defaultHandler;
+        let defaultHandler;
 
         this.setDefaultHandler = handler => {
             if (typeof handler !== "function")
@@ -139,7 +139,7 @@ class StreamTracker {
             });
         }
         
-        var timer = null;
+        let timer = null;
 
         const poll = () => {
             const tic = Date.now();
