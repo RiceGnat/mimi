@@ -47,11 +47,13 @@ function setup(cmd) {
         "Streams",
         (context, name) => 
             context.tracker.untrack(name, context.sender.channelId)
-            .then(results => 
-                results.affectedRows > 0 ?
-                "<:mimisad:372499377752768522> Stream untracked"
-                : "<:mimiwondering:372499377807425546> Stream isn't being tracked..."
-            , error =>
+            .then(results => {
+                if (results.affectedRows > 0) {
+                    console.log(`User ${context.sender.user} untracked ${stream.name} in channel ${format.channelName(context.sender.channelId, context.bot)}`);
+                    return "<:mimisad:372499377752768522> Stream untracked";
+                }
+                else return "<:mimiwondering:372499377807425546> Stream isn't being tracked...";
+            }, error =>
                 `<:mimiconfused:372499377807425566> Something went wrong`
             )
             .then(msg => ({
