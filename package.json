@@ -12,10 +12,10 @@
     "node": ">=7.0"
   },
   "dependencies": {
-    "discord.io": "github:izy521/discord.io",
     "dotenv": "^6.0.0",
     "mysql": "^2.14.1",
-    "request": "^2.88.0"
+    "request": "^2.88.0",
+    "wumpus": "github:RiceGnat/wumpus"
   },
   "config": {
     "owner": "108470819088248832"

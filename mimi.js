@@ -1,4 +1,3 @@
-const Discord = require("discord.io");
 const cmd = require("./mimi-cmd");
 const db = require("./mimi-db");
 const format = require("./mimi-format");
@@ -12,39 +11,15 @@ require("dotenv").load();
 
 const options = {};
 
-const bot = new Discord.Client({
-    token: process.env.BOT_TOKEN,
-    autorun: true
-});
-
-bot.on("ready", function (evt) {
-    console.log(`Connected to Discord as ${bot.username} (${bot.id})`);
-    console.log(`Mimi is in ${Object.entries(bot.servers).length} servers`);
-});
-
-bot.on("disconnect", function (errMsg, code) {
-    console.log(`Mimi disconnected (${code}: ${errMsg})`);
-    console.log("Reconnecting...");
-    bot.connect();
-});
-
-bot.on("message", function (user, userId, channelId, message, evt) {
-    if (message.substring(0, 1) == "!") {
-        cmd.parse(message.substring(1), {
-            user: user,
-            userId: userId,
-            channelId: channelId,
-            tracker: tracker,
-            bot: bot,
-            options: options
-        })
-        .then(msg => {
-            if (msg) bot.sendMessage(msg);
-        }, error => {
-            console.log(error);
-        });
-    }
-});
+const bot = require("wumpus").bot(
+    process.env.BOT_TOKEN,
+    "!",
+    {
+        tracker,
+        options
+    },
+    cmd.setup
+)
 
 function sendMessage(msg) {
     bot.sendMessage(msg, (error, response) => {
