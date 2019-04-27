@@ -168,42 +168,11 @@ function setup(cmd) {
                 });
             }));
 
-    cmd.add("help",
-        "[<command>]",
-        "Get usage and bot info",
-        "Help",
-        (context, name) => {
-            if (!name) {
-                let fields = {};
-                Object.values(cmd.list).forEach(command => {
-                    if (!fields[command.category]) fields[command.category] = [];
-
-                    fields[command.category].push(cmd.getHelpFormat(command));
-                    const subcommands = Object.values(command.subcommands);
-                    if (subcommands.length > 0) {
-                        subcommands.forEach(subcommand => {
-                            fields[command.category].push(`${cmd.getHelpFormat(subcommand, command.name)}`);
-                        });
-                    }
-                });
-                return {
-                    to: context.sender.channelId,
-                    embed: {
-                        title: `<:mimigreetings:372499377501241355> Mimi v${require("./package.json").version}`,
-                        description: "Picarto bot for stream tracking. For more information, see [GitHub](https://github.com/RiceGnat/mimi/).",
-                        fields: Object.entries(fields).map(([key, value]) => ({
-                            name: key,
-                            value: value.join("\n")
-                        })),
-                        footer: { text: `Developed by RiceGnat#9420` }
-                    }
-                };
-            }
-            else return { 
-                    to: context.sender.channelId,
-                    message: cmd.getHelpFormat(cmd.list[name])
-                };
-        });
+    cmd.help({
+        title: `<:mimigreetings:372499377501241355> Mimi v${require("./package.json").version}`,
+        description: "Picarto bot for stream tracking. For more information, see [GitHub](https://github.com/RiceGnat/mimi/).",
+        footer: { text: `Developed by RiceGnat#9420` }
+    });
 }
 
 module.exports = {
