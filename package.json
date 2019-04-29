@@ -16,8 +16,5 @@
     "mysql": "^2.14.1",
     "request": "^2.88.0",
     "wumpus": "github:RiceGnat/wumpus"
-  },
-  "config": {
-    "owner": "108470819088248832"
   }
 }

@@ -14,10 +14,7 @@ function setup(cmd) {
                 embed: format.stream(stream)
             }), error => ({
                 message: "<:mimiconfused:372499377807425566> Stream not found"
-            }))
-            .then(msg => Object.assign({
-                to: context.sender.channelId
-            }, msg)));
+            })));
 
     cmd.add("track",
         "<name>",
@@ -37,7 +34,6 @@ function setup(cmd) {
                 return "<:mimiconfused:372499377807425566> Couldn't track stream";
             })
             .then(msg => ({
-                to: context.sender.channelId,
                 message: msg
             })));
             
@@ -57,7 +53,6 @@ function setup(cmd) {
                 `<:mimiconfused:372499377807425566> Something went wrong`
             )
             .then(msg => ({
-                to: context.sender.channelId,
                 message: msg
             })));
             
@@ -78,7 +73,6 @@ function setup(cmd) {
                         : stream
                     ).sort().join("\n")
                 ).then(msg => ({
-                    to: context.sender.channelId,
                     embed: { description: msg }
                 }))
             ));
@@ -108,7 +102,6 @@ function setup(cmd) {
                 return "<:mimivictory:372499377639522325> Option saved";
             }, error => `<:mimiscratch:372499377928798208> ${error}`)
             .then(msg => ({
-                to: context.sender.channelId,
                 message: msg
             })));
 
@@ -162,7 +155,6 @@ function setup(cmd) {
             picarto.getEmote(name)
             .then(data => {
                 context.bot.uploadFile({
-                    to: context.sender.channelId,
                     file: data,
                     filename: `${name}.png`
                 });
