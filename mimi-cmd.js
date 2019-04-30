@@ -153,12 +153,12 @@ function setup(cmd) {
         "Emotes",
         (context, name) => 
             picarto.getEmote(name)
-            .then(data => {
-                context.bot.uploadFile({
-                    file: data,
-                    filename: `${name}.png`
-                });
-            }));
+            .then(data => ({
+                files: [{
+                    attachment: data,
+                    name: `${name}.png`
+                }]
+            })));
 
     cmd.help({
         title: `<:mimigreetings:372499377501241355> Mimi v${require("./package.json").version}`,
