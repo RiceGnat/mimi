@@ -37,15 +37,17 @@ tracker.setDefaultHandler((stream, channelId, last) => {
     const hideNsfw = options[channelId] ? options[channelId]["notify-nsfw-preview"] === false : false;
 
     // Make sure Mimi is still in the channel
-    if (bot.channels[channelId]) {
+    let channel = bot.channels.get(channelId);
+    if (channel) {
         // Check channel's notify settings
         if ((!limit || Date.now() - last >= limit) &&
             (!stream.private || showPrivate)) {
-            sendMessage({
-                to: channelId,
-                message: `<:mimiright:372499377773871115> ${stream.name} is now online!`,
-                embed: format.stream(stream, stream.adult && hideNsfw)
-            });
+                channel.send(
+                `<:mimiright:372499377773871115> ${stream.name} is now online!`,
+                {
+                    embed: format.stream(stream, stream.adult && hideNsfw)
+                }
+            );
             return true;
         }
         else {
