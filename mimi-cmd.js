@@ -1,27 +1,30 @@
 const db = require("./mimi-db");
 const format = require("./mimi-format");
-const picarto = require("./picarto");
+
+const api = {
+    picarto: require("./api/picarto"),
+    pixiv: require("./api/pixiv")
+};
 
 function setup(cmd) {
-
     cmd.add("stream",
         "<name>",
         "Look up a stream",
         "Streams",
-        (context, name) => 
-            picarto.getStreamInfo(name)
+        (context, name, source = "picarto") => 
+            api[source].getStreamInfo(name)
             .then(stream => ({
-                embed: format.stream(stream)
+                embed: api[source].embed(stream)
             }), error => ({
                 message: "<:mimiconfused:372499377807425566> Stream not found"
             })));
 
     cmd.add("track",
-        "<name>",
+        "<name> [<source>]",
         "Track a stream in this channel",
         "Streams",
-        (context, name) => 
-            context.tracker.track(name, "picarto", context.sender.channelId)
+        (context, name, source = "picarto") => 
+            context.tracker.track(name, source, context.sender.channelId)
             .then(stream => {
                 console.log(`User ${context.sender.user} tracked ${stream.name} in channel ${format.channelName(context.sender.channelId, context.bot)}`);
                 return `<:mimigreetings:372499377501241355> Now tracking ${stream.name}`
@@ -38,11 +41,11 @@ function setup(cmd) {
             })));
             
     cmd.add("untrack",
-        "<name>",
+        "<name> [<source>]",
         "Untrack a stream for this channel",
         "Streams",
-        (context, name) => 
-            context.tracker.untrack(name, "picarto", context.sender.channelId)
+        (context, name, source = "picarto") => 
+            context.tracker.untrack(name, source, context.sender.channelId)
             .then(results => {
                 if (results.affectedRows > 0) {
                     return "<:mimisad:372499377752768522> Stream untracked";

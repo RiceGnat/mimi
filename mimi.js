@@ -1,6 +1,12 @@
 const cmd = require("./mimi-cmd");
 const db = require("./mimi-db");
 const format = require("./mimi-format");
+
+const api = {
+    picarto: require("./api/picarto"),
+    pixiv: require("./api/pixiv")
+};
+
 const tracker = require("./tracker").new({
     interval: 50,
     pollTime: 5000,
@@ -31,7 +37,7 @@ function sendMessage(msg) {
     });
 }
 
-tracker.setDefaultHandler((stream, channelId, last) => {
+tracker.setDefaultHandler((stream, { source, name, private, adult, channelId, last }) => {
     const limit = options[channelId] ? options[channelId]["notify-limit"] : 0;
     const showPrivate = options[channelId] ? options[channelId]["notify-private"] : false;
     const hideNsfw = options[channelId] ? options[channelId]["notify-nsfw-preview"] === false : false;
@@ -41,11 +47,11 @@ tracker.setDefaultHandler((stream, channelId, last) => {
     if (channel) {
         // Check channel's notify settings
         if ((!limit || Date.now() - last >= limit) &&
-            (!stream.private || showPrivate)) {
+            (!private || showPrivate)) {
                 channel.send(
-                `<:mimiright:372499377773871115> ${stream.name} is now online!`,
+                `<:mimiright:372499377773871115> ${name} is now online!`,
                 {
-                    embed: format.stream(stream, stream.adult && hideNsfw)
+                    embed: api[source].embed(stream, adult && hideNsfw)
                 }
             );
             return true;

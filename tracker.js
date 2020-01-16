@@ -1,4 +1,4 @@
-const picarto = require("./picarto");
+const picarto = require("./api/picarto");
 const db = require("./mimi-db");
 require("dotenv").load();
 
@@ -121,10 +121,18 @@ class StreamTracker {
                                 .then(stream =>
                                     // Go through all tracker subscriptions for the stream
                                     Object.keys(tracked.subs).forEach(key => {
+                                        // Extract basic properties for message
+                                        const props = {
+                                            ...tracker[source].api.props(stream),
+                                            source,
+                                            channelId: key,
+                                            last: tracked.subs[key].last
+                                        };
+
                                         // Call specific handler if it exists, else call default handler
                                         const updateLast = tracked.subs[key].handler ?
-                                            tracked.subs[key].handler(stream, key, tracked.subs[key].last)
-                                            : defaultHandler(stream, key, tracked.subs[key].last);
+                                            tracked.subs[key].handler(stream, props)
+                                            : defaultHandler(stream, props);
 
                                         // If the handler returns true, update last timestamp
                                         if (updateLast)
