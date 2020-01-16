@@ -7,8 +7,9 @@ const headers = {
 
 function GetStreamInfo(name) {
     return new Promise((resolve, reject) => {
+        // Find user first
         request.get({
-            url: `https://sketch.pixiv.net/api/lives/users/@${name}.json`,
+            url: `https://sketch.pixiv.net/api/users/@${name}.json`,
             headers: {
                 ...headers,
                 "X-Requested-With": `https://sketch.pixiv.net/@${name}`,
@@ -19,6 +20,23 @@ function GetStreamInfo(name) {
             if (err || resp.statusCode !== 200 || !body.data.id) return reject(err ? err : resp.statusCode);
             resolve(body.data);
         });
+    })
+    .then(user => {
+        return new Promise((resolve, reject) => {
+            // Then try to find a stream
+            request.get({
+                url: `https://sketch.pixiv.net/api/lives/users/@${name}.json`,
+                headers: {
+                    ...headers,
+                    "X-Requested-With": `https://sketch.pixiv.net/@${name}`,
+                    "Referer": `https://sketch.pixiv.net/@${name}`
+                },
+                json: true
+            }, (err, resp, body) => {
+                if (err || resp.statusCode !== 200 || !body.data.id) return resolve({ user });
+                resolve(body.data);
+            });
+        })
     });
 }
 
@@ -36,11 +54,10 @@ function GetOnline() {
             if (err || resp.statusCode !== 200) return reject(err ? err : resp.statusCode);
             resolve(body.data.lives.map(stream => ({ name: stream.user.unique_name })));
         });
-    })
+    });
 }
 
 function BuildEmbed(stream, hideThumb) {
-    let last = new Date(stream.finished_at);
     // let multistreamers = [];
     // stream.multistream.forEach((element, index) => {
     //     if (element.name != stream.name) {
@@ -62,12 +79,11 @@ function BuildEmbed(stream, hideThumb) {
     // }
     return {
         title: stream.user.name,
-        url: GetStreamUrl(stream),
-        description: `**${stream.name}**\n\n${stream.description}`,
+        url: stream.id ? GetStreamUrl(stream) : `https://sketch.pixiv.net/@${stream.user.unique_name}`,
+        description: stream.description ? `**${stream.name}**\n\n${stream.description}` : undefined,
         fields: fields,
         thumbnail: { url: stream.user.icon.photo.original.url },
         image: stream.is_broadcasting && !hideThumb ? { url: `${stream.thumbnail.w1280.url}?${Date.now()}` } : null,
-        footer: !stream.is_broadcasting && last.valueOf() != 0 ? { text: `Last online on ${last.toDateString()}` } : null
     };
 }
 
