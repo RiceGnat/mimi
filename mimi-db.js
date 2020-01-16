@@ -20,19 +20,19 @@ function queryPromise(query, args) {
 }
 
 function GetTrackedStreams() {
-    return queryPromise("select stream_name, discord_channel from stream_tracking");
+    return queryPromise("select stream_name, source, discord_channel from stream_tracking");
 }
 
 function GetTrackedStreamsByChannel(channelID) {
-    return queryPromise(`select stream_name from stream_tracking where discord_channel="${channelID}"`);
+    return queryPromise(`select stream_name, source from stream_tracking where discord_channel="${channelID}"`);
 }
 
-function TrackStream(streamName, channelID) {
-    return queryPromise(`insert into stream_tracking (stream_name, discord_channel) values ("${streamName}", "${channelID}")`);
+function TrackStream(streamName, source, channelID) {
+    return queryPromise(`insert into stream_tracking (stream_name, source, discord_channel) values ("${streamName}", "${source}", "${channelID}")`);
 }
 
-function UntrackStream(streamName, channelID) {
-    return queryPromise(`delete from stream_tracking where stream_name="${streamName}" and discord_channel="${channelID}"`);
+function UntrackStream(streamName, source, channelID) {
+    return queryPromise(`delete from stream_tracking where stream_name="${streamName}" and source="${source}" and discord_channel="${channelID}"`);
 }
 
 function GetOptions() {

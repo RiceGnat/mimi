@@ -21,7 +21,7 @@ function setup(cmd) {
         "Track a stream in this channel",
         "Streams",
         (context, name) => 
-            context.tracker.track(name, context.sender.channelId)
+            context.tracker.track(name, "picarto", context.sender.channelId)
             .then(stream => {
                 console.log(`User ${context.sender.user} tracked ${stream.name} in channel ${format.channelName(context.sender.channelId, context.bot)}`);
                 return `<:mimigreetings:372499377501241355> Now tracking ${stream.name}`
@@ -42,7 +42,7 @@ function setup(cmd) {
         "Untrack a stream for this channel",
         "Streams",
         (context, name) => 
-            context.tracker.untrack(name, context.sender.channelId)
+            context.tracker.untrack(name, "picarto", context.sender.channelId)
             .then(results => {
                 if (results.affectedRows > 0) {
                     return "<:mimisad:372499377752768522> Stream untracked";
@@ -161,7 +161,7 @@ function setup(cmd) {
 
     cmd.help({
         title: `<:mimigreetings:372499377501241355> Mimi v${require("./package.json").version}`,
-        description: "Picarto bot for stream tracking. For more information, see [GitHub](https://github.com/RiceGnat/mimi/).",
+        description: "Bot for Picarto stream tracking. For more information, see [GitHub](https://github.com/RiceGnat/mimi/).",
         footer: { text: `Developed by RiceGnat#9420` }
     });
 }

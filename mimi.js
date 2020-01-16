@@ -69,7 +69,7 @@ Promise.all([
     db.getTrackedStreams()
     .then(results => {
         results.forEach(row => {
-            tracker.subscribe(row.stream_name, row.discord_channel);
+            tracker.subscribe(row.stream_name, row.source, row.discord_channel);
         })
         const streams = [...new Set(results.map(row => row.stream_name))];
         const channels = [...new Set(results.map(row => row.discord_channel))];
