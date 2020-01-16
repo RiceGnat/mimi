@@ -1,4 +1,5 @@
-const picarto = require("./picarto");
+const picarto = require("./api/picarto");
+const pixiv = require("./api/pixiv");
 const db = require("./mimi-db");
 require("dotenv").load();
 
@@ -7,15 +8,25 @@ class StreamTracker {
         this.options = Object.assign({
             interval: 100,
             pollTime: 5000,
-            batchSize: 1
+            batchSize: 1,
         }, options);
-        
+
         console.log("Tracker options set:");
         console.log(`  Request interval: ${this.options.interval}ms`);
         console.log(`  Minimum polling loop time: ${this.options.pollTime}ms`);
         console.log(`  Request batch size: ${this.options.batchSize}`);
 
-        const tracker = {};
+        const tracker = {
+            picarto: {
+                api: picarto,
+                tracked: {}
+            },
+            pixiv: {
+                api: pixiv,
+                tracked: {}
+            }
+        };
+
         let defaultHandler;
 
         this.setDefaultHandler = handler => {
@@ -24,8 +35,8 @@ class StreamTracker {
 
             defaultHandler = handler;
         }
-        
-        this.track = (streamName, key, handler) => {
+
+        this.track = (streamName, source, key, handler) => {
             /* Picarto stream names are case insensitive, but stream names are stored
              * in the database with caps intact based on how the user set it. MySQL
              * value comparison is case insensitive by default so everything should
@@ -33,126 +44,129 @@ class StreamTracker {
              * tracker object will use lowercase stream names.
              */
             const name = streamName.toLowerCase();
-    
+
             // Check that the stream exists
-            return picarto.getStreamInfo(name)
-            // Save record in database
-            .then(stream => 
-                db.trackStream(stream.name, key)
-                .then(() => {
-                    // Add stream and/or subscription to tracker
-                    this.subscribe(name, key, handler);
-                    return stream;
-                },
-                error => {
-                    throw {
-                        isDuplicate: error.code == "ER_DUP_ENTRY",
-                        stream: stream
-                    }
-                })
-            )
+            return tracker[source].api.getStreamInfo(name)
+                // Save record in database
+                .then(stream =>
+                    db.trackStream(name, source, key)
+                        .then(() => {
+                            // Add stream and/or subscription to tracker
+                            this.subscribe(name, source, key, handler);
+                            return stream;
+                        },
+                            error => {
+                                throw {
+                                    isDuplicate: error.code == "ER_DUP_ENTRY",
+                                    stream: stream
+                                }
+                            })
+                )
         }
 
-        this.subscribe = (streamName, key, handler) => {
+        this.subscribe = (streamName, source, key, handler) => {
             const name = streamName.toLowerCase();
-    
+
             if (handler && typeof handler !== "function")
                 throw "Handler must be a function";
 
             // Create entry in tracker if it doesn't exist yet
-            if (!tracker[name])
-            tracker[name] = {
-                subs: {},
-                online: false
-            };
+            if (!tracker[source].tracked[name])
+                tracker[source].tracked[name] = {
+                    subs: {},
+                    online: false
+                };
 
             // Register subscription to tracker
-            tracker[name].subs[key] = {
+            tracker[source].tracked[name].subs[key] = {
                 handler: handler,
                 last: 0
             }
         }
 
-        this.untrack = (streamName, key) => {
+        this.untrack = (streamName, source, key) => {
             /* In order to allow client removal of dead streams, we won't check
              * the stream name with Picarto before removing the entries.
              */
             const name = streamName.toLowerCase();
-    
+
             // No need to check DB before removing from tracker
-            if (tracker[name]) {
+            if (tracker[source].tracked[name]) {
                 // Delete subscription
-                delete tracker[name].subs[key];
-    
+                delete tracker[source].tracked[name].subs[key];
+
                 // If no subs left, remove channel from tracker
-                if (Object.keys(tracker[name].subs).length == 0)
-                    delete tracker[name];
+                if (Object.keys(tracker[source].tracked[name].subs).length == 0)
+                    delete tracker[source].tracked[name];
             }
-    
+
             // Remove record from DB
-            return db.untrackStream(name, key);
+            return db.untrackStream(name, source, key);
         }
 
-        const check = (i) => {
-            const names = Object.keys(tracker) ;
-            const size = this.options.batchSize ? this.options.batchSize : Object.keys(tracker).length;
-            const batch = names.slice(i, i + size);
+        const fetch = () => {
+            return Promise.all(
+                Object.keys(tracker).map(source => tracker[source].api.getOnline()
+                    .then(online => {
+                        // Remap array to lookup
+                        const lookup = {};
+                        online.forEach(stream => lookup[stream.name.toLowerCase()] = stream);
+                        return lookup;
+                    })
+                    .then(online => Object.keys(tracker[source].tracked).forEach(name => {
+                        const tracked = tracker[source].tracked[name];
+                        const stream = online[name];
 
-            return Promise.all(batch.map(name =>
-                // Check stream
-                picarto.getStreamInfo(name)
-                .then(stream => {
-                    // Notify on positive latch
-                    if (!tracker[name].online && stream.online) {
-                        console.log(`${stream.name} has gone online`);
-            
-                        // Go through all tracker subscriptions for the stream
-                        Object.keys(tracker[name].subs).forEach(key => {
-                            // Call specific handler if it exists, else call default handler
-                            const updateLast = tracker[name].subs[key].handler ?
-                                tracker[name].subs[key].handler(stream, key, tracker[name].subs[key].last)
-                                : defaultHandler(stream, key, tracker[name].subs[key].last);
-                            
-                            // If the handler returns true, update last
-                            if (updateLast)
-                                tracker[name].subs[key].last = Date.now();
-                        });
-                    }
-                    tracker[name].online = stream.online;
-                }, error => {
-                    console.log(`Stream request for ${name} failed: ${error}`);
-                    if (error === 404) {
-                        delete tracker[name];
-                        i--;
-                        console.log(`Removed ${name} from the tracker`);
-                    }
-                })
-            ))
-            .then(() => {
-                // Wait for the interval and check next stream
-                if (i < names.length - size)
-                    return new Promise(resolve => {
-                        setTimeout(() => {
-                            resolve(check(i + size));
-                        }, this.options.interval);
-                    });
-            });
+                        // Notify on positive latch
+                        if (!tracked.online && stream) {
+                            console.log(`${stream.name} has gone online`);
+
+                            // Get full stream info
+                            tracker[source].api.getStreamInfo(name)
+                                .then(stream =>
+                                    // Go through all tracker subscriptions for the stream
+                                    Object.keys(tracked.subs).forEach(key => {
+                                        // Extract basic properties for message
+                                        const props = {
+                                            ...tracker[source].api.props(stream),
+                                            source,
+                                            channelId: key,
+                                            last: tracked.subs[key].last
+                                        };
+
+                                        // Call specific handler if it exists, else call default handler
+                                        const updateLast = tracked.subs[key].handler ?
+                                            tracked.subs[key].handler(stream, props)
+                                            : defaultHandler(stream, props);
+
+                                        // If the handler returns true, update last timestamp
+                                        if (updateLast)
+                                            tracked.subs[key].last = Date.now();
+                                    })
+                                );
+                        }
+
+                        // Record current online status
+                        tracked.online = online.hasOwnProperty(name);
+                    }))
+                )
+            );
         }
-        
+
         let timer = null;
 
         const poll = () => {
             const tic = Date.now();
-            check(0)
-            .then(() => {
-                const toc = Date.now();
-                const wait = Math.max(this.options.pollTime - (toc - tic), this.options.interval);
-                if (process.env.NODE_ENV === "dev")
-                    console.log(`Polling loop completed in ${(toc - tic) / 1000}s; waiting for ${wait / 1000}s`);
-                timer = setTimeout(() => {
-                    poll();
-                }, Math.max(this.options.pollTime - (toc - tic), this.options.interval));
-            });
+            fetch()
+                .then(() => {
+                    const toc = Date.now();
+                    const wait = Math.max(this.options.pollTime - (toc - tic), this.options.interval);
+                    if (process.env.NODE_ENV === "dev")
+                        console.log(`Polling loop completed in ${(toc - tic) / 1000}s; waiting for ${wait / 1000}s`);
+                    timer = setTimeout(() => {
+                        poll();
+                    }, Math.max(this.options.pollTime - (toc - tic), this.options.interval));
+                });
         }
 
 
@@ -163,7 +177,7 @@ class StreamTracker {
                 poll();
             }
         }
-        
+
         this.stop = () => {
             if (timer !== null) {
                 console.log("Stream tracker stopped");
