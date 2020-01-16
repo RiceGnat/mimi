@@ -74,10 +74,23 @@ function BuildEmbed(stream, hideThumb) {
     };
 }
 
+function MessageParams(stream) {
+    return {
+        ...stream,
+        url: GetStreamUrl(stream)
+    }
+}
+
+
+function GetStreamUrl(stream) {
+    return `http://picarto.tv/${stream.name}`;
+}
+
 module.exports = {
     getStreamInfo: GetStreamInfo,
     getEmote: GetEmote,
     getOnline: GetOnline,
     embed: BuildEmbed,
-    props: stream => stream
+    props: MessageParams,
+    url: GetStreamUrl
 };

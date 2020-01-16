@@ -1,4 +1,5 @@
 const picarto = require("./api/picarto");
+const pixiv = require("./api/pixiv");
 const db = require("./mimi-db");
 require("dotenv").load();
 
@@ -18,6 +19,10 @@ class StreamTracker {
         const tracker = {
             picarto: {
                 api: picarto,
+                tracked: {}
+            },
+            pixiv: {
+                api: pixiv,
                 tracked: {}
             }
         };
@@ -41,10 +46,10 @@ class StreamTracker {
             const name = streamName.toLowerCase();
 
             // Check that the stream exists
-            return picarto.getStreamInfo(name)
+            return tracker[source].api.getStreamInfo(name)
                 // Save record in database
                 .then(stream =>
-                    db.trackStream(stream.name, source, key)
+                    db.trackStream(name, source, key)
                         .then(() => {
                             // Add stream and/or subscription to tracker
                             this.subscribe(name, source, key, handler);

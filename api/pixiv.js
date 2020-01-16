@@ -34,7 +34,7 @@ function GetOnline() {
             json: true
         },(err, resp, body) => {
             if (err || resp.statusCode !== 200) return reject(err ? err : resp.statusCode);
-            resolve(body.data.lives);
+            resolve(body.data.lives.map(stream => ({ name: stream.user.unique_name })));
         });
     })
 }
@@ -62,8 +62,8 @@ function BuildEmbed(stream, hideThumb) {
     // }
     return {
         title: stream.user.name,
-        url: `https://sketch.pixiv.net/@${stream.user.unique_name}/lives/${stream.id}`,
-        description: stream.description + "\t" + (stream.is_r18 ? " :underage:" : ""),
+        url: GetStreamUrl(stream),
+        description: `**${stream.name}**\n\n${stream.description}`,
         fields: fields,
         thumbnail: { url: stream.user.icon.photo.original.url },
         image: stream.is_broadcasting && !hideThumb ? { url: `${stream.thumbnail.w1280.url}?${Date.now()}` } : null,
@@ -74,13 +74,20 @@ function BuildEmbed(stream, hideThumb) {
 function MessageParams(stream) {
     return {
         name: stream.user.name,
-        adult: stream.is_r18
+        adult: stream.is_r18,
+        online: stream.is_broadcasting,
+        url: GetStreamUrl(stream)
     }
+}
+
+function GetStreamUrl(stream) {
+    return `https://sketch.pixiv.net/@${stream.user.unique_name}/lives/${stream.id}`;
 }
 
 module.exports = {
     getStreamInfo: GetStreamInfo,
     getOnline: GetOnline,
     embed: BuildEmbed,
-    props: MessageParams
+    props: MessageParams,
+    url: GetStreamUrl
 };

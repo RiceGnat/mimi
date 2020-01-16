@@ -26,11 +26,14 @@ function setup(cmd) {
         (context, name, source = "picarto") => 
             context.tracker.track(name, source, context.sender.channelId)
             .then(stream => {
-                console.log(`User ${context.sender.user} tracked ${stream.name} in channel ${format.channelName(context.sender.channelId, context.bot)}`);
-                return `<:mimigreetings:372499377501241355> Now tracking ${stream.name}`
+                const msgName = api[source].props(stream).name;
+                console.log(`User ${context.sender.user} tracked ${msgName} (${name}) in channel ${format.channelName(context.sender.channelId, context.bot)}`);
+                return `<:mimigreetings:372499377501241355> Now tracking ${msgName}`
             }, error => {
-                if (error.isDuplicate)
-                    return `<:mimiscratch:372499377928798208> Already tracking ${error.stream.name} in this channel`;
+                if (error.isDuplicate) {
+                    const msgName = api[source].props(error.stream).name;
+                    return `<:mimiscratch:372499377928798208> Already tracking ${msgName} in this channel`;
+                }
                 
                 console.log("Error trying to track stream");
                 console.log(error);
@@ -66,14 +69,16 @@ function setup(cmd) {
             db.getTrackedStreamsByChannel(context.sender.channelId)
             .then(results => 
                 Promise.all(results.map(row =>
-                    picarto.getStreamInfo(row.stream_name)
+                    api[row.source].getStreamInfo(row.stream_name)
                     .catch(error => row.stream_name)
-                )).then(results => 
-                    results.map(stream => 
-                        stream.name ?
-                        `${stream.name} ${stream.online ? `[**(online)**](https://picarto.tv/${stream.name})` : "*(offline)*"}`
+                    .then(stream => {
+                        const props = api[row.source].props(stream);
+                        return props.name ?
+                        `${props.name}${row.source !== "picarto" ? ` [${row.source}] ` : " "}${props.online ? `[**(online)**](${props.url})` : "*(offline)*"}`
                         : stream
-                    ).sort().join("\n")
+                    })
+                )).then(results => 
+                    results.sort().join("\n")
                 ).then(msg => ({
                     embed: { description: msg }
                 }))
