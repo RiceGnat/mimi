@@ -9,8 +9,7 @@ const api = {
 
 const tracker = require("./tracker").new({
     interval: 50,
-    pollTime: 5000,
-    batchSize: 20
+    pollTime: 5000
 });
 
 require("dotenv").load();

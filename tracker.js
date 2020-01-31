@@ -8,13 +8,11 @@ class StreamTracker {
         this.options = Object.assign({
             interval: 100,
             pollTime: 5000,
-            batchSize: 1,
         }, options);
 
         console.log("Tracker options set:");
         console.log(`  Request interval: ${this.options.interval}ms`);
         console.log(`  Minimum polling loop time: ${this.options.pollTime}ms`);
-        console.log(`  Request batch size: ${this.options.batchSize}`);
 
         const tracker = {
             picarto: {
