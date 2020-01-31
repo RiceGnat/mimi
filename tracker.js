@@ -145,7 +145,7 @@ class StreamTracker {
                         }
 
                         // Record current online status
-                        tracked.online = online.hasOwnProperty(name);
+                        tracked.online = online[name] !== undefined;
                     }))
                 )
             );
