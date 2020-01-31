@@ -1,10 +1,9 @@
 const db = require("./mimi-db");
 const format = require("./mimi-format");
+const picarto = require("./api/picarto");
+const pixiv = require("./api/pixiv");
 
-const api = {
-    picarto: require("./api/picarto"),
-    pixiv: require("./api/pixiv")
-};
+const api = { picarto, pixiv };
 
 function setup(cmd) {
     cmd.add("stream",
