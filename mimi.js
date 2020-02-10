@@ -57,6 +57,7 @@ tracker.setDefaultHandler((stream, { source, name, private, adult, channelId, la
         }
         else {
             console.log(`Notification to channel ${format.channelName(channelId, bot)} squelched`);
+            return false;
         }
     }
     console.log(`Mimi is not in channel ${channelId}`);
