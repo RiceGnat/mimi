@@ -110,7 +110,7 @@ class StreamTracker {
                         const lookup = {};
                         online.forEach(stream => lookup[stream.name.toLowerCase()] = stream);
                         return lookup;
-                    })
+                    }, () => ({}))
                     .then(online => Object.keys(tracker[source].tracked).forEach(name => {
                         const tracked = tracker[source].tracked[name];
                         const stream = online[name];
