@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "dotenv": "^6.0.0",
-    "mysql": "^2.14.1",
-    "request": "^2.88.0",
+    "mysql": "^2.18.1",
+    "request": "^2.88.2",
     "wumpus": "github:RiceGnat/wumpus"
   }
 }
